@@ -1,4 +1,5 @@
 /* ENTRY() commnad defines the entrypoint of the program */
+/* We will define Reset_Handler in the startup file */
 ENTRY(Reset_Handler)
 
 /* MEMORY command defines the available memories with their locations and sizes */
@@ -29,34 +30,40 @@ MEMORY
 SECTIONS 
 {
 	/* FLASH memory starts with text section stored */
+	/* .text section contains code related data like function definitions etc.,
+	 * data that does not change and cannot written to */
+	_stext = 0x08000000;
 	.text : 
 	{
-		/* '*' refers to all the .xyz sections of all the files */
+		/* interrupt vector table is required to be present at the start of FLASH */
 		*(.isr_vector)
+
+		/* put all .text section of input files here together in output file */
 		*(.text)
 		/* data contained in .rodata section is part of text 
 		 * we can choose to include it in the .text section or
-		 * create a separate block for it
-		 * */
+		 * create a separate block for it for clarity
+		 */
 		/* *(.rodata) */
-		
-		/* declare a symbol to track the ending address of .text section */ 
-		_etext = .;	/* addr of the start of text section + size of data = _etext */ /* note the semicolon */
 	}> FLASH
+	/* declare a symbol to track the ending address of .text section */ 
+	_etext = .;	/* addr of the start of text section + size of data = _etext */ /* note the semicolon */
+	
 	/* > VMA AT> LMA */
 	/* VMA= virutal memory address; LMA= load memory address */
 	/* in this case VMA = LMA = FLASH */	
 	
-	/*
+	/* Read-only data
 	 * .rodata section contains initialized global variables and constants
-	 * */	
+	 */	
 	.rodata : 
 	{
+		/* put all .rodata section of input files here together in output file */
 		*(.rodata)
-		_erodata = .;	/* end of .rodata section = start of .data section */
-						/* this will be required for transefrring .data from FLASH to SRAM */
 	}> FLASH
-
+	_erodata = .;	/* end of .rodata section = start of .data section */
+					/* this will be required for transefrring .data from FLASH to SRAM */
+	
 	/* data region is relocated since the code sits in FLASH initially bu
 	 * but then is loaded into SRAM for execution
 	 */
@@ -64,36 +71,43 @@ SECTIONS
 	/* COMPILE-TIME/USER INITIALIZED DATA 
 	 * This data will need to be transferred...
 	 * from FLASH(where it is initially loaded, hence LMA) to SRAM(during program execution, VMA) */
+	
+	_sdata = 0x20000000;	/* addr of start of .data section in SRAM... */
 	.data :
 	{
-		_sdata = 0x20000000;	/* addr of start of .data section in SRAM... */
-								/* since location counters track VMA not LMA */
 		*(.data)
-		_edata = .;	/* end of data section */
 	}> SRAM AT> FLASH
+	_edata = .;	/* end of data section, which would an addr in the SRAM which is VMA for .data section */
+				/* rememeber that location counters track VMA not LMA */
 	/*_edata - _sdata = size of data section */
 	
-	/* AT RUNTIME: 
+	/* AT RUNTIME:
+	 * Through the startup script
 	 * .data will need to be transferred FROM src addr: [_erodata to _erodata + (_edata - _sdata)] 
 	 * TO start addr: [_sdata]
-	 * */
+	 * /
 	
-	/* UNINITIALIZED/COMPILER INITIALIZED DATA/0-INITIALIZED DATA*/
+	/* UNINITIALIZED/COMPILER INITIALIZED DATA/0-INITIALIZED DATA */
+	_sbss = .;	/* start of bss section in SRAM */
+				/* usually comes after .data section */
+				/* therefore _sbss = _edata */
 	.bss :
 	{
 		*(.bss)
 	}> SRAM
-	/* since .bss is uninitialized data therefore
-	 * .bss data is not loaded on flash but is directly initialized in SRAM 
+	_ebss = .; /* end of bss section */
+	/* since .bss is uninitialized data... 
+	 * therefore .bss data is not loaded on flash but is directly initialized in SRAM 
 	 * */
 }
 
 /* Location counters are provided by linkers which can be used to
  * track start and ending memory locations of various labels
  * Location counters always track VMA(final location) not LMA(initial location)
- *
- * -> Location counters can only be used inside the SECTIONS command
- * */
+ * -> Location counters can only be used inside the SECTIONS command 
+ * -> Location counter symbols are exported by the linker so they can be used and referenced to
+ *    in your .c files.
+ */
 
 
 

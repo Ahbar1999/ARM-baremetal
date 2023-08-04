@@ -12,10 +12,18 @@
 
 #include <stdint.h>
 
+/* IMPORTANT: 	Note that linker symbols are always memory locations and not 'values'. 
+ * 				You can get the address of a symbol but you cant access its value
+ * 				because it has no value. 
+ * 				And the address of the symbol would be the addr that you assigned to
+ * 				it in the linker script.
+ */
+
 // import linker symbols
 extern uint32_t _etext;
 extern uint32_t _sdata;
 extern uint32_t _edata;
+extern uint32_t _erodata;
 
 extern uint32_t _sbss;
 extern uint32_t _ebss;
@@ -68,7 +76,25 @@ void Reset_Handler(void) {
 	// copy .data section to SRAM
 	// init the .bss section to zero in SRAM
 	// call main()
-	/* call init functions of std library if being used */	
+	/* call init functions of std library if being used */
+	
+	uint32_t dotdata_size = (uint32_t)&_edata - (uint32_t)&_sdata;
+	// copy .data from FLASH to SRAM 
+	uint32_t *dest = (uint32_t)&_sdata;
+	uint32_t *src = (uint32_t)&_erodata;
+	// traverse bytewise
+	for (uint32_t i = 0; i < dotdata_size; i++, dest++, src++) {
+		*dest = *src;
+	}
+	
+	uint32_t sbss_size = (uint32_t)&_sbss - (uint32_t)&_ebss;
+	uint32_t* ptr = (uint32_t)&_sbss; 	
+	for (uint32_t i = 0; i < sbss_size; i++, ptr++){
+		*ptr = 0;	
+	}
+	
+	// call main
+	main();
 }
 
 

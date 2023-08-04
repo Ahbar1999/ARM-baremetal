@@ -33,8 +33,10 @@ SECTIONS
 	/* .text section contains code related data like function definitions etc.,
 	 * data that does not change and cannot written to */
 	_stext = 0x08000000;
+	/* output section */
 	.text : 
 	{
+		/* input sections */
 		/* interrupt vector table is required to be present at the start of FLASH */
 		*(.isr_vector)
 

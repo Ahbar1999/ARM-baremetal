@@ -17,6 +17,7 @@
  * 				because it has no value. 
  * 				And the address of the symbol would be the addr that you assigned to
  * 				it in the linker script.
+ * https://stackoverflow.com/questions/8398755/access-symbols-defined-in-the-linker-script-by-application
  */
 
 // import linker symbols
@@ -34,12 +35,19 @@ extern uint32_t _ebss;
 #define SRAM_END ((SRAM_START) + (SRAM_SIZE))
 #define STACK_START SRAM_END 	// stack grows from the top
 
+// test variables
+const uint32_t constant = 32;
+int uninit_var;
+
 // 0x00000000 -> 0x00000004: 32 bits Reserved for Stack Ptr
 // 0x00000004 onwards Interrupt vector pointers live, each ptr takes 32 bits or 4 bytes
 // 0x00000004: Reset
 // 0x00000008: NMI 
 // 0x0000000C: HardFault 
 // and so on...
+
+// main prototype
+int main(void);
 
 // using variable __attribute__ allows us to put specific part of the code
 // into special/customized sections in the memory
@@ -69,7 +77,7 @@ uint32_t vectors[] __attribute__((section(".isr_vector"))) = {
 
 void Default_Handler(void) {
 	// just hang 
-	while(true);
+	while(1);
 }
 
 void Reset_Handler(void) {
@@ -80,21 +88,29 @@ void Reset_Handler(void) {
 	
 	uint32_t dotdata_size = (uint32_t)&_edata - (uint32_t)&_sdata;
 	// copy .data from FLASH to SRAM 
-	uint32_t *dest = (uint32_t)&_sdata;
-	uint32_t *src = (uint32_t)&_erodata;
+	uint32_t* dest = (uint32_t*)&_sdata;	//	addr in SRAM
+	uint32_t* src = (uint32_t*)&_erodata; 	//	addr in FLASH
+	
 	// traverse bytewise
 	for (uint32_t i = 0; i < dotdata_size; i++, dest++, src++) {
 		*dest = *src;
 	}
 	
 	uint32_t sbss_size = (uint32_t)&_sbss - (uint32_t)&_ebss;
-	uint32_t* ptr = (uint32_t)&_sbss; 	
+	uint32_t* ptr = (uint32_t*)&_sbss; 	
 	for (uint32_t i = 0; i < sbss_size; i++, ptr++){
 		*ptr = 0;	
 	}
 	
 	// call main
 	main();
+}
+
+int main(void) {
+	int a = 0;
+	a += 1;
+	
+	return 0;
 }
 
 

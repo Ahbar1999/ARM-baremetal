@@ -19,9 +19,9 @@ MEMORY
 
 	/* We have 2 memory regions in stm32f0: FLASH: 64KB AND SRAM: 8KB */
 	/* FLASH memory is readable and executable */	
-	FLASH(rx): ORIGIN=0x08000000, LENGTH=64K
+	FLASH(rx): ORIGIN =0x08000000, LENGTH =64K
 	/* SRAM memory is obviously readable, writable and executable */	
-	SRAM(rwx): ORIGIN=0x20000000, LENGTH=8K
+	SRAM(rwx): ORIGIN =0x20000000, LENGTH =8K
 }
 
 /*SECTIONS command is used to define various sections(their locations) in the memory*/
@@ -62,6 +62,9 @@ SECTIONS
 	{
 		/* put all .rodata section of input files here together in output file */
 		*(.rodata)
+		/* SET LOCATION COUNTER TO NEXT WORD BOUNDARY */
+		/* SO THAT ENDING OF .rodata SECTION IS WORD ALIGNED */
+		. = ALIGN(4);
 	}> FLASH
 	_erodata = .;	/* end of .rodata section = start of .data section */
 					/* this will be required for transefrring .data from FLASH to SRAM */
@@ -74,10 +77,11 @@ SECTIONS
 	 * This data will need to be transferred...
 	 * from FLASH(where it is initially loaded, hence LMA) to SRAM(during program execution, VMA) */
 	
-	_sdata = 0x20000000;	/* addr of start of .data section in SRAM... */
+	_sdata = .;	/* addr of start of .data section in SRAM... 0x20000000 */
 	.data :
 	{
 		*(.data)
+		. = ALIGN(4);
 	}> SRAM AT> FLASH
 	_edata = .;	/* end of data section, which would an addr in the SRAM which is VMA for .data section */
 				/* rememeber that location counters track VMA not LMA */
@@ -96,6 +100,8 @@ SECTIONS
 	.bss :
 	{
 		*(.bss)
+		*(COMMON)
+		. = ALIGN(4); 	/* align the start of next section to a word boundary */
 	}> SRAM
 	_ebss = .; /* end of bss section */
 	/* since .bss is uninitialized data... 

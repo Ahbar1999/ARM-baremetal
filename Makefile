@@ -34,9 +34,13 @@ all:stm32f0_startup.o final.elf
 stm32f0_startup.o:stm32f0_startup.c
 	$(CC) $(CFLAGS) -o $@ $^
 
-# run linker
+# build target from linker
 final.elf:stm32f0_startup.o
 	$(CC) $(LDFLAGS) -o $@ $^
+
+# load command to download target on board
+load:
+	openocd -f board_cfg_files/stm32f0discovery.cfg
 
 clean:
 	rm -rf *.o *.elf

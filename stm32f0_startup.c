@@ -29,6 +29,7 @@ extern uint32_t _erodata;
 extern uint32_t _sbss;
 extern uint32_t _ebss;
 
+extern int main(void);
 // addresses are represented in bytes so we write all values in bytes
 #define SRAM_START 0x20000000U	// U: unsigned int
 #define SRAM_SIZE (64 * 1024) 	// 64KB
@@ -44,10 +45,7 @@ int uninit_var;
 // 0x00000004: Reset
 // 0x00000008: NMI 
 // 0x0000000C: HardFault 
-// and so on...
-
-// main prototype
-int main(void);
+// and so on..
 
 // using variable __attribute__ allows us to put specific part of the code
 // into special/customized sections in the memory
@@ -103,17 +101,7 @@ void Reset_Handler(void) {
 	}
 	
 	// call main
-	main();
+	main();	
 }
-
-int main(void) {
-	int a = 0;
-	a += 1;
-	
-	return 0;
-}
-
-
-
 
 

@@ -35,7 +35,7 @@ stm32f0_startup.o:stm32f0_startup.c
 	$(CC) $(CFLAGS) -o $@ $^
 
 # build target from linker
-final.elf: main.o stm32f0_startup.o
+final.elf: main.o blink.o stm32f0_startup.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 # load command to download target on board

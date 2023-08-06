@@ -1,7 +1,5 @@
-#ifndef _BLINK_
-#define _BLINK_
-
 #include <stdint.h>
+#include "blink.h"
 
 #define GPIOA_START				0x48000000
 
@@ -89,4 +87,3 @@ void blink(uint8_t pin) {
 	*GPIOA_BSR 		|= SET << pin; 	 
 }
 
-#endif

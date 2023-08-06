@@ -1,10 +1,8 @@
-#ifndef _MAIN_
-#define _MAIN_
-
 #include <stdint.h>
-#include "blink.c"
+#include "main.h"
+#include "blink.h"
 
-extern int main(void) {
+int main(void) {
 	int a = 0;
 	a += 1;
 	
@@ -16,5 +14,3 @@ extern int main(void) {
 
     return 0;
 }
-
-#endif

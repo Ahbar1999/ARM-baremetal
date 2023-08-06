@@ -11,6 +11,7 @@
  * */
 
 #include <stdint.h>
+#include "main.h"
 
 /* IMPORTANT: 	Note that linker symbols are always memory locations and not 'values'. 
  * 				You can get the address of a symbol but you cant access its value
@@ -29,7 +30,7 @@ extern uint32_t _erodata;
 extern uint32_t _sbss;
 extern uint32_t _ebss;
 
-extern int main(void);
+// extern int main(void);
 // addresses are represented in bytes so we write all values in bytes
 #define SRAM_START 0x20000000U	// U: unsigned int
 #define SRAM_SIZE (64 * 1024) 	// 64KB

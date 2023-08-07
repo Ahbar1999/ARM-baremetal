@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include "blink.h"
-#include "systick.h"
 
 #define GPIOA_START				0x48000000
 // on board led is connected to PORT C
@@ -94,28 +93,24 @@ void reset(void) {
 	*RCC_AHBENR &= RCC_AHBENR_RESET_VALUE;   	
 	*RCC_AHBENR |= 1 << RCC_RCC_AHBENR_IOPAEN;	
 	*/
-	*RCC_AHBENR = RCC_AHBENR_RESET_VALUE;   	
+	*RCC_AHBENR &= RCC_AHBENR_RESET_VALUE;   	
 	*RCC_AHBENR |= 1 << RCC_RCC_AHBENR_IOPCEN;	
 	// wait until its enabled	
 	// while(!(*RCC_AHBENR & ((1 << RCC_RCC_AHBENR_IOPCEN) != (1 << RCC_RCC_AHBENR_IOPCEN))));
 
-	*GPIOC_MODER 	= 		GPIOC_MODER_RESET_VALUE;
-	*GPIOC_OTYPER 	=		GPIOC_OTYPER_RESET_VALUE;	
-	*GPIOC_OSPEEDR 	=		GPIOC_OSPEEDR_RESET_VALUE;  	
-	*GPIOC_PUPDR 	=		GPIOC_PUPDR_RESET_VALUE; 
-	*GPIOC_IDR_WRITE=		GPIOC_IDR_RESET_VALUE; 
-	*GPIOC_ODR		=		GPIOC_ODR_RESET_VALUE; 
-	*GPIOC_BSR 		=		GPIOC_BSR_RESET_VALUE;
-	*GPIOC_BRR 		=		GPIOC_BRR_RESET_VALUE;
-	*GPIOC_LCKR 	=		GPIOC_LCKR_RESET_VALUE; 
-	*GPIOC_AFRL		=		GPIOC_AFRL_RESET_VALUE; 
-	*GPIOC_AFRH 	=		GPIOC_AFRH_RESET_VALUE; 	
-	*GPIOC_AFRL		=		GPIOC_AFRL_RESET_VALUE; 
+	*GPIOC_MODER 	&= 		GPIOC_MODER_RESET_VALUE;
+	*GPIOC_OTYPER 	&=		GPIOC_OTYPER_RESET_VALUE;	
+	*GPIOC_OSPEEDR 	&=		GPIOC_OSPEEDR_RESET_VALUE;  	
+	*GPIOC_PUPDR 	&=		GPIOC_PUPDR_RESET_VALUE; 
+	*GPIOC_IDR_WRITE	&= 	GPIOC_IDR_RESET_VALUE; 
+	*GPIOC_ODR		&=  	GPIOC_ODR_RESET_VALUE; 
+	*GPIOC_BSR 		&=  	GPIOC_BSR_RESET_VALUE;
+	*GPIOC_BRR 		&=  	GPIOC_BRR_RESET_VALUE;
+	*GPIOC_LCKR 	&=  	GPIOC_LCKR_RESET_VALUE; 
+	*GPIOC_AFRL		&=  	GPIOC_AFRL_RESET_VALUE; 
+	*GPIOC_AFRH 	&=  	GPIOC_AFRH_RESET_VALUE; 	
+	*GPIOC_AFRL		&=  	GPIOC_AFRL_RESET_VALUE; 
 }
-
-extern uint32_t* STK_CVR;
-extern uint32_t* STK_CSR;
-extern uint8_t systick_configured;
 
 void blink(uint8_t pin) {
 	// reset the PORT registers
@@ -125,21 +120,7 @@ void blink(uint8_t pin) {
 	*GPIOC_OTYPER 	|= OP_PUSH_PULL << pin;	
 	*GPIOC_OSPEEDR 	|= MEDIUM << pin * 2;  	
 	*GPIOC_PUPDR 	|= PULL_DOWN << pin * 2;
-	
 	// set the given pin number bit in the bit set register which will write for the same pin in ODR 
 	*GPIOC_BSR 		|= SET << pin; 	 
-	
-	// call enable_systick from systick.h
-	configure_systick();
-
-	while(systick_configured) {
-		// default clk speed is 8MHz(HSI) => 125,000 cycles per 1 second 
-		// systick set to 250,000		
-		// check if counter was reset since we last checked
-		if ((*STK_CSR) & (1 << 16)) {
-			// toggle operation
-			*GPIOC_ODR ^= (1 << pin);
-		}
-	}	
 }
 

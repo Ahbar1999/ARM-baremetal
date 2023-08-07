@@ -42,6 +42,7 @@ SECTIONS
 
 		/* put all .text section of input files here together in output file */
 		*(.text)
+		*(.text.*)
 		/* data contained in .rodata section is part of text 
 		 * we can choose to include it in the .text section or
 		 * create a separate block for it for clarity
@@ -62,6 +63,7 @@ SECTIONS
 	{
 		/* put all .rodata section of input files here together in output file */
 		*(.rodata)
+		*(.rodata.*)
 		/* SET LOCATION COUNTER TO NEXT WORD BOUNDARY */
 		/* SO THAT ENDING OF .rodata SECTION IS WORD ALIGNED */
 		. = ALIGN(4);
@@ -77,33 +79,33 @@ SECTIONS
 	 * This data will need to be transferred...
 	 * from FLASH(where it is initially loaded, hence LMA) to SRAM(during program execution, VMA) */
 	
-	_sdata = .;	/* addr of start of .data section in SRAM... 0x20000000 */
 	.data :
 	{
+		_sdata = .;	/* addr of start of .data section in SRAM... 0x20000000 */
 		*(.data)
 		. = ALIGN(4);
+		_edata = .;	/* end of data section, which would an addr in the SRAM which is VMA for .data section */
 	}> SRAM AT> FLASH
-	_edata = .;	/* end of data section, which would an addr in the SRAM which is VMA for .data section */
-				/* rememeber that location counters track VMA not LMA */
+	/* rememeber that location counters track VMA not LMA */
 	/*_edata - _sdata = size of data section */
 	
 	/* AT RUNTIME:
 	 * Through the startup script
 	 * .data will need to be transferred FROM src addr: [_erodata to _erodata + (_edata - _sdata)] 
 	 * TO start addr: [_sdata]
-	 * /
+	 */
 	
-	/* UNINITIALIZED/COMPILER INITIALIZED DATA/0-INITIALIZED DATA */
-	_sbss = .;	/* start of bss section in SRAM */
-				/* usually comes after .data section */
-				/* therefore _sbss = _edata */
 	.bss :
 	{
+		/* UNINITIALIZED/COMPILER INITIALIZED DATA/0-INITIALIZED DATA */
+		_sbss = .;	/* start of bss section in SRAM */
+					/* usually comes after .data section */
+					/* therefore _sbss = _edata */
 		*(.bss)
 		*(COMMON)
 		. = ALIGN(4); 	/* align the start of next section to a word boundary */
+		_ebss = .; /* end of bss section */
 	}> SRAM
-	_ebss = .; /* end of bss section */
 	/* since .bss is uninitialized data... 
 	 * therefore .bss data is not loaded on flash but is directly initialized in SRAM 
 	 * */

@@ -55,33 +55,33 @@ enum GPIO_BS {NO_ACTION_BS, SET};
 enum GPIO_BR {NO_ACTION_BR, RESET};
 
 // To enable clock on PORTA
-uint32_t* RCC_AHBENR 		= 	(uint32_t*)RCC_START + 0x14;
+uint32_t* RCC_AHBENR 		= 	(uint32_t*)(RCC_START + 0x14);
 
-uint32_t* GPIOA_MODER 		=  	(uint32_t*)GPIOA_START + GPIO_MODER_OFFSET;  
-uint32_t* GPIOA_OTYPER 	    = 	(uint32_t*)GPIOA_START + GPIO_OTYPER_OFFSET;
-uint32_t* GPIOA_OSPEEDR 	=	(uint32_t*)GPIOA_START + GPIO_OSPEEDR_OFFSET;   	
-uint32_t* GPIOA_PUPDR 		=  	(uint32_t*)GPIOA_START + GPIO_PUPDR_OFFSET;
-uint32_t* GPIOA_IDR_READ	= 	(uint32_t*)GPIOA_START + GPIO_IDR_READ_OFFSET; 
-uint32_t* GPIOA_IDR_WRITE	=	(uint32_t*)GPIOA_START + GPIO_IDR_WRITE_OFFSET; 
-uint32_t* GPIOA_ODR	    =  		(uint32_t*)GPIOA_START + GPIO_ODR_OFFSET;
-uint32_t* GPIOA_BSR 	=  		(uint32_t*)GPIOA_START + GPIO_BSR_OFFSET;
-uint32_t* GPIOA_BRR 	=  		(uint32_t*)GPIOA_START + GPIO_BRR_OFFSET;
-uint32_t* GPIOA_LCKR 	=  		(uint32_t*)GPIOA_START + GPIO_LCKR_OFFSET;
-uint32_t* GPIOA_AFRL	=  		(uint32_t*)GPIOA_START + GPIO_AFRL_OFFSET; 
-uint32_t* GPIOA_AFRH 	=  		(uint32_t*)GPIOA_START + GPIO_AFRH_OFFSET;
+uint32_t* GPIOA_MODER 		=  	(uint32_t*)(GPIOA_START + GPIO_MODER_OFFSET);  
+uint32_t* GPIOA_OTYPER 	    = 	(uint32_t*)(GPIOA_START + GPIO_OTYPER_OFFSET);
+uint32_t* GPIOA_OSPEEDR 	=	(uint32_t*)(GPIOA_START + GPIO_OSPEEDR_OFFSET);   	
+uint32_t* GPIOA_PUPDR 		=  	(uint32_t*)(GPIOA_START + GPIO_PUPDR_OFFSET);
+uint32_t* GPIOA_IDR_READ	= 	(uint32_t*)(GPIOA_START + GPIO_IDR_READ_OFFSET); 
+uint32_t* GPIOA_IDR_WRITE	=	(uint32_t*)(GPIOA_START + GPIO_IDR_WRITE_OFFSET); 
+uint32_t* GPIOA_ODR	    =  		(uint32_t*)(GPIOA_START + GPIO_ODR_OFFSET);
+uint32_t* GPIOA_BSR 	=  		(uint32_t*)(GPIOA_START + GPIO_BSR_OFFSET);
+uint32_t* GPIOA_BRR 	=  		(uint32_t*)(GPIOA_START + GPIO_BRR_OFFSET);
+uint32_t* GPIOA_LCKR 	=  		(uint32_t*)(GPIOA_START + GPIO_LCKR_OFFSET);
+uint32_t* GPIOA_AFRL	=  		(uint32_t*)(GPIOA_START + GPIO_AFRL_OFFSET); 
+uint32_t* GPIOA_AFRH 	=  		(uint32_t*)(GPIOA_START + GPIO_AFRH_OFFSET);
 
-uint32_t* GPIOC_MODER 		=  	(uint32_t*)GPIOC_START + GPIO_MODER_OFFSET;  
-uint32_t* GPIOC_OTYPER 	    = 	(uint32_t*)GPIOC_START + GPIO_OTYPER_OFFSET;
-uint32_t* GPIOC_OSPEEDR 	=	(uint32_t*)GPIOC_START + GPIO_OSPEEDR_OFFSET;   	
-uint32_t* GPIOC_PUPDR 		=  	(uint32_t*)GPIOC_START + GPIO_PUPDR_OFFSET;
-uint32_t* GPIOC_IDR_READ	= 	(uint32_t*)GPIOC_START + GPIO_IDR_READ_OFFSET; 
-uint32_t* GPIOC_IDR_WRITE	=	(uint32_t*)GPIOC_START + GPIO_IDR_WRITE_OFFSET; 
-uint32_t* GPIOC_ODR	    =  		(uint32_t*)GPIOC_START + GPIO_ODR_OFFSET;
-uint32_t* GPIOC_BSR 	=  		(uint32_t*)GPIOC_START + GPIO_BSR_OFFSET;
-uint32_t* GPIOC_BRR 	=  		(uint32_t*)GPIOC_START + GPIO_BRR_OFFSET;
-uint32_t* GPIOC_LCKR 	=  		(uint32_t*)GPIOC_START + GPIO_LCKR_OFFSET;
-uint32_t* GPIOC_AFRL	=  		(uint32_t*)GPIOC_START + GPIO_AFRL_OFFSET; 
-uint32_t* GPIOC_AFRH 	=  		(uint32_t*)GPIOC_START + GPIO_AFRH_OFFSET;
+uint32_t* GPIOC_MODER 		=  	(uint32_t*)(GPIOC_START + GPIO_MODER_OFFSET);  
+uint32_t* GPIOC_OTYPER 	    = 	(uint32_t*)(GPIOC_START + GPIO_OTYPER_OFFSET);
+uint32_t* GPIOC_OSPEEDR 	=	(uint32_t*)(GPIOC_START + GPIO_OSPEEDR_OFFSET);   	
+uint32_t* GPIOC_PUPDR 		=  	(uint32_t*)(GPIOC_START + GPIO_PUPDR_OFFSET);
+uint32_t* GPIOC_IDR_READ	= 	(uint32_t*)(GPIOC_START + GPIO_IDR_READ_OFFSET); 
+uint32_t* GPIOC_IDR_WRITE	=	(uint32_t*)(GPIOC_START + GPIO_IDR_WRITE_OFFSET); 
+uint32_t* GPIOC_ODR	    =  		(uint32_t*)(GPIOC_START + GPIO_ODR_OFFSET);
+uint32_t* GPIOC_BSR 	=  		(uint32_t*)(GPIOC_START + GPIO_BSR_OFFSET);
+uint32_t* GPIOC_BRR 	=  		(uint32_t*)(GPIOC_START + GPIO_BRR_OFFSET);
+uint32_t* GPIOC_LCKR 	=  		(uint32_t*)(GPIOC_START + GPIO_LCKR_OFFSET);
+uint32_t* GPIOC_AFRL	=  		(uint32_t*)(GPIOC_START + GPIO_AFRL_OFFSET); 
+uint32_t* GPIOC_AFRH 	=  		(uint32_t*)(GPIOC_START + GPIO_AFRH_OFFSET);
 
 // PORT clock enable bit positions 
 #define RCC_RCC_AHBENR_IOPAEN 17
@@ -96,7 +96,7 @@ void reset(void) {
 	*RCC_AHBENR &= RCC_AHBENR_RESET_VALUE;   	
 	*RCC_AHBENR |= 1 << RCC_RCC_AHBENR_IOPCEN;	
 	// wait until its enabled	
-	while(!(*RCC_AHBENR & ((1 << RCC_RCC_AHBENR_IOPCEN) != (1 << RCC_RCC_AHBENR_IOPCEN))));
+	// while(!(*RCC_AHBENR & ((1 << RCC_RCC_AHBENR_IOPCEN) != (1 << RCC_RCC_AHBENR_IOPCEN))));
 
 	*GPIOC_MODER 	&= 		GPIOC_MODER_RESET_VALUE;
 	*GPIOC_OTYPER 	&=		GPIOC_OTYPER_RESET_VALUE;	
@@ -115,11 +115,11 @@ void reset(void) {
 void blink(uint8_t pin) {
 	// reset the PORT registers
 	// reset();
-	
-	*GPIOC_MODER 	|= GP_OP_MODE << pin;
+	// some are being shifted twice because some registers accept 2 bit value for each pin 	
+	*GPIOC_MODER 	|= GP_OP_MODE << pin * 2;
 	*GPIOC_OTYPER 	|= OP_PUSH_PULL << pin;	
-	*GPIOC_OSPEEDR 	|= MEDIUM << pin;  	
-	*GPIOC_PUPDR 	|= PULL_DOWN << pin;
+	*GPIOC_OSPEEDR 	|= MEDIUM << pin * 2;  	
+	*GPIOC_PUPDR 	|= PULL_DOWN << pin * 2;
 	// set the given pin number bit in the bit set register which will write for the same pin in ODR 
 	*GPIOC_BSR 		|= SET << pin; 	 
 }

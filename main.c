@@ -8,7 +8,8 @@ int main(void) {
 	
     // call blink
     reset();
-    blink(0);
+	// LD3 led
+    blink(9);
 	
 	while(1);
 

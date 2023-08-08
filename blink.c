@@ -56,33 +56,33 @@ enum GPIO_BS {NO_ACTION_BS, SET};
 enum GPIO_BR {NO_ACTION_BR, RESET};
 
 // To enable clock on PORTA
-uint32_t* RCC_AHBENR 		= 	(uint32_t*)(RCC_START + 0x14);
+uint32_t volatile *RCC_AHBENR 		= 	(uint32_t*)(RCC_START + 0x14);
 
-uint32_t* GPIOA_MODER 		=  	(uint32_t*)(GPIOA_START + GPIO_MODER_OFFSET);  
-uint32_t* GPIOA_OTYPER 	    = 	(uint32_t*)(GPIOA_START + GPIO_OTYPER_OFFSET);
-uint32_t* GPIOA_OSPEEDR 	=	(uint32_t*)(GPIOA_START + GPIO_OSPEEDR_OFFSET);   	
-uint32_t* GPIOA_PUPDR 		=  	(uint32_t*)(GPIOA_START + GPIO_PUPDR_OFFSET);
-uint32_t* GPIOA_IDR_READ	= 	(uint32_t*)(GPIOA_START + GPIO_IDR_READ_OFFSET); 
-uint32_t* GPIOA_IDR_WRITE	=	(uint32_t*)(GPIOA_START + GPIO_IDR_WRITE_OFFSET); 
-uint32_t* GPIOA_ODR	    =  		(uint32_t*)(GPIOA_START + GPIO_ODR_OFFSET);
-uint32_t* GPIOA_BSR 	=  		(uint32_t*)(GPIOA_START + GPIO_BSR_OFFSET);
-uint32_t* GPIOA_BRR 	=  		(uint32_t*)(GPIOA_START + GPIO_BRR_OFFSET);
-uint32_t* GPIOA_LCKR 	=  		(uint32_t*)(GPIOA_START + GPIO_LCKR_OFFSET);
-uint32_t* GPIOA_AFRL	=  		(uint32_t*)(GPIOA_START + GPIO_AFRL_OFFSET); 
-uint32_t* GPIOA_AFRH 	=  		(uint32_t*)(GPIOA_START + GPIO_AFRH_OFFSET);
+uint32_t volatile *GPIOA_MODER 		=  	(uint32_t*)(GPIOA_START + GPIO_MODER_OFFSET);  
+uint32_t volatile *GPIOA_OTYPER 	= 	(uint32_t*)(GPIOA_START + GPIO_OTYPER_OFFSET);
+uint32_t volatile *GPIOA_OSPEEDR 	=	(uint32_t*)(GPIOA_START + GPIO_OSPEEDR_OFFSET);   	
+uint32_t volatile *GPIOA_PUPDR 		=  	(uint32_t*)(GPIOA_START + GPIO_PUPDR_OFFSET);
+uint32_t volatile *GPIOA_IDR_READ	= 	(uint32_t*)(GPIOA_START + GPIO_IDR_READ_OFFSET); 
+uint32_t volatile *GPIOA_IDR_WRITE	=	(uint32_t*)(GPIOA_START + GPIO_IDR_WRITE_OFFSET); 
+uint32_t volatile *GPIOA_ODR	    =  	(uint32_t*)(GPIOA_START + GPIO_ODR_OFFSET);
+uint32_t volatile *GPIOA_BSR 	=  		(uint32_t*)(GPIOA_START + GPIO_BSR_OFFSET);
+uint32_t volatile *GPIOA_BRR 	=  		(uint32_t*)(GPIOA_START + GPIO_BRR_OFFSET);
+uint32_t volatile *GPIOA_LCKR 	=  		(uint32_t*)(GPIOA_START + GPIO_LCKR_OFFSET);
+uint32_t volatile *GPIOA_AFRL	=  		(uint32_t*)(GPIOA_START + GPIO_AFRL_OFFSET); 
+uint32_t volatile *GPIOA_AFRH 	=  		(uint32_t*)(GPIOA_START + GPIO_AFRH_OFFSET);
 
-uint32_t* GPIOC_MODER 		=  	(uint32_t*)(GPIOC_START + GPIO_MODER_OFFSET);  
-uint32_t* GPIOC_OTYPER 	    = 	(uint32_t*)(GPIOC_START + GPIO_OTYPER_OFFSET);
-uint32_t* GPIOC_OSPEEDR 	=	(uint32_t*)(GPIOC_START + GPIO_OSPEEDR_OFFSET);   	
-uint32_t* GPIOC_PUPDR 		=  	(uint32_t*)(GPIOC_START + GPIO_PUPDR_OFFSET);
-uint32_t* GPIOC_IDR_READ	= 	(uint32_t*)(GPIOC_START + GPIO_IDR_READ_OFFSET); 
-uint32_t* GPIOC_IDR_WRITE	=	(uint32_t*)(GPIOC_START + GPIO_IDR_WRITE_OFFSET); 
-uint32_t* GPIOC_ODR	    =  		(uint32_t*)(GPIOC_START + GPIO_ODR_OFFSET);
-uint32_t* GPIOC_BSR 	=  		(uint32_t*)(GPIOC_START + GPIO_BSR_OFFSET);
-uint32_t* GPIOC_BRR 	=  		(uint32_t*)(GPIOC_START + GPIO_BRR_OFFSET);
-uint32_t* GPIOC_LCKR 	=  		(uint32_t*)(GPIOC_START + GPIO_LCKR_OFFSET);
-uint32_t* GPIOC_AFRL	=  		(uint32_t*)(GPIOC_START + GPIO_AFRL_OFFSET); 
-uint32_t* GPIOC_AFRH 	=  		(uint32_t*)(GPIOC_START + GPIO_AFRH_OFFSET);
+uint32_t volatile *GPIOC_MODER 		=  	(uint32_t*)(GPIOC_START + GPIO_MODER_OFFSET);  
+uint32_t volatile *GPIOC_OTYPER 	= 	(uint32_t*)(GPIOC_START + GPIO_OTYPER_OFFSET);
+uint32_t volatile *GPIOC_OSPEEDR 	=	(uint32_t*)(GPIOC_START + GPIO_OSPEEDR_OFFSET);   	
+uint32_t volatile *GPIOC_PUPDR 		=  	(uint32_t*)(GPIOC_START + GPIO_PUPDR_OFFSET);
+uint32_t volatile *GPIOC_IDR_READ	= 	(uint32_t*)(GPIOC_START + GPIO_IDR_READ_OFFSET); 
+uint32_t volatile *GPIOC_IDR_WRITE	=	(uint32_t*)(GPIOC_START + GPIO_IDR_WRITE_OFFSET); 
+uint32_t volatile *GPIOC_ODR	    =  	(uint32_t*)(GPIOC_START + GPIO_ODR_OFFSET);
+uint32_t volatile *GPIOC_BSR 	=  		(uint32_t*)(GPIOC_START + GPIO_BSR_OFFSET);
+uint32_t volatile *GPIOC_BRR 	=  		(uint32_t*)(GPIOC_START + GPIO_BRR_OFFSET);
+uint32_t volatile *GPIOC_LCKR 	=  		(uint32_t*)(GPIOC_START + GPIO_LCKR_OFFSET);
+uint32_t volatile *GPIOC_AFRL	=  		(uint32_t*)(GPIOC_START + GPIO_AFRL_OFFSET); 
+uint32_t volatile *GPIOC_AFRH 	=  		(uint32_t*)(GPIOC_START + GPIO_AFRH_OFFSET);
 
 // PORT clock enable bit positions 
 #define RCC_RCC_AHBENR_IOPAEN 17
@@ -113,8 +113,8 @@ void reset(void) {
 	*GPIOC_AFRL		=		GPIOC_AFRL_RESET_VALUE; 
 }
 
-extern uint32_t* STK_CVR;
-extern uint32_t* STK_CSR;
+extern uint32_t volatile *STK_CVR;
+extern uint32_t volatile *STK_CSR;
 extern uint8_t systick_configured;
 
 void blink(uint8_t pin) {

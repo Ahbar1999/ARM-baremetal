@@ -12,6 +12,7 @@
 
 #include <stdint.h>
 #include "main.h"
+#include "blink.h"
 
 /* IMPORTANT: 	Note that linker symbols are always memory locations and not 'values'. 
  * 				You can get the address of a symbol but you cant access its value
@@ -61,13 +62,22 @@ void SysTick_Handler(void) __attribute__((weak, alias("Default_Handler")));
  * */
 uint32_t vectors[] __attribute__((section(".isr_vector"))) = {
 	STACK_START,
-	(uint32_t)&Reset_Handler,
-	(uint32_t)&NMI_Handler,		/* Here the addr of Default_Handler will be stored */
+	(uint32_t)Reset_Handler,
+	(uint32_t)NMI_Handler,		/* Here the addr of Default_Handler will be stored */
 								/* and same for all functionas aliasing Default_Handler */
-	(uint32_t)&HardFault_Handler,
-	(uint32_t)&SVCall_Handler,
-	(uint32_t)&PendSV_Handler,
-	(uint32_t)&SysTick_Handler,
+	(uint32_t)HardFault_Handler,
+	0, 
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	(uint32_t)SVCall_Handler,
+	0,
+	0,
+	(uint32_t)PendSV_Handler,
+	(uint32_t)SysTick_Handler,
 };
 
 void Default_Handler(void) {

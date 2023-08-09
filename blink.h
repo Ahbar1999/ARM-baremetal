@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-void reset(void);
+void reset(uint8_t pin);
 void blink(uint8_t pin);
 
 #endif

@@ -92,16 +92,9 @@ extern volatile uint32_t* STK_CVR;
 extern volatile uint32_t* STK_CSR;
 extern uint8_t systick_configured;
 
-/*
-void SysTick_Handler(void) {
-	// toggle operation
-	*GPIOC_ODR ^= (1 << 9);
-}
-*/
-
 volatile uint32_t* ICSR = (uint32_t*)(0xE000ED00 + 0x04);
 
-void reset(void) {
+void reset(uint8_t pin) {
 	// enable port A
 	/*	
 	*RCC_AHBENR &= RCC_AHBENR_RESET_VALUE;   	
@@ -126,11 +119,7 @@ void reset(void) {
 	*GPIOC_AFRL		=		GPIOC_AFRL_RESET_VALUE; 
 	
 	*ICSR			=		0x00000000;
-}
-
-void blink(uint8_t pin) {
-	// reset the PORT registers
-	// reset();
+	
 	// some are being shifted twice because some registers accept 2 bit value for each pin 	
 	*GPIOC_MODER 	|= GP_OP_MODE << pin * 2;
 	*GPIOC_OTYPER 	|= OP_PUSH_PULL << pin;	
@@ -141,21 +130,19 @@ void blink(uint8_t pin) {
 	
 	// call enable_systick from systick.h
 	configure_systick();
-	while(systick_configured) {
-		// default clk speed is 8MHz(HSI) => 125,000 cycles per 1 second 
-		// systick set to 250,000		
-		// check if counter was reset since we last checked
-		if ((*STK_CSR) & (1 << 16)) {
-			// toggle operation
-			*GPIOC_ODR ^= (1 << pin);
-		}
-	}
-	/*
-	while(1) {
-		if ((*ICSR & 1 << 26) != 0) {
-			*ICSR |= 1 << 25;
-		}
+}
+
+void blink(uint8_t pin) {
+	
+	// default clk speed is 8MHz(HSI) => 125,000 cycles per 1 second 
+	// systick set to 250,000		
+	// check if counter was reset since we last checked
+	/*	
+	if (systick_configured && (*STK_CSR) & (1 << 16)) {
+		// toggle operation
+		*GPIOC_ODR ^= (1 << pin);
 	}
 	*/
+	*GPIOC_ODR ^= (1 << pin);
 }
 

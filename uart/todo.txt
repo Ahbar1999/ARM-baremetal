@@ -1,0 +1,3 @@
+
+# Tasks
+1. Configure systick interrupt routine to send a uart message whenever it counts to 0

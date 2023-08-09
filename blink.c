@@ -88,6 +88,19 @@ uint32_t volatile *GPIOC_AFRH 	=  		(uint32_t*)(GPIOC_START + GPIO_AFRH_OFFSET);
 #define RCC_RCC_AHBENR_IOPAEN 17
 #define RCC_RCC_AHBENR_IOPCEN 19
 
+extern volatile uint32_t* STK_CVR;
+extern volatile uint32_t* STK_CSR;
+extern uint8_t systick_configured;
+
+/*
+void SysTick_Handler(void) {
+	// toggle operation
+	*GPIOC_ODR ^= (1 << 9);
+}
+*/
+
+volatile uint32_t* ICSR = (uint32_t*)(0xE000ED00 + 0x04);
+
 void reset(void) {
 	// enable port A
 	/*	
@@ -111,11 +124,9 @@ void reset(void) {
 	*GPIOC_AFRL		=		GPIOC_AFRL_RESET_VALUE; 
 	*GPIOC_AFRH 	=		GPIOC_AFRH_RESET_VALUE; 	
 	*GPIOC_AFRL		=		GPIOC_AFRL_RESET_VALUE; 
+	
+	*ICSR			=		0x00000000;
 }
-
-extern uint32_t volatile *STK_CVR;
-extern uint32_t volatile *STK_CSR;
-extern uint8_t systick_configured;
 
 void blink(uint8_t pin) {
 	// reset the PORT registers
@@ -125,13 +136,11 @@ void blink(uint8_t pin) {
 	*GPIOC_OTYPER 	|= OP_PUSH_PULL << pin;	
 	*GPIOC_OSPEEDR 	|= MEDIUM << pin * 2;  	
 	*GPIOC_PUPDR 	|= PULL_DOWN << pin * 2;
-	
 	// set the given pin number bit in the bit set register which will write for the same pin in ODR 
 	*GPIOC_BSR 		|= SET << pin; 	 
 	
 	// call enable_systick from systick.h
 	configure_systick();
-
 	while(systick_configured) {
 		// default clk speed is 8MHz(HSI) => 125,000 cycles per 1 second 
 		// systick set to 250,000		
@@ -140,6 +149,13 @@ void blink(uint8_t pin) {
 			// toggle operation
 			*GPIOC_ODR ^= (1 << pin);
 		}
-	}	
+	}
+	/*
+	while(1) {
+		if ((*ICSR & 1 << 26) != 0) {
+			*ICSR |= 1 << 25;
+		}
+	}
+	*/
 }
 

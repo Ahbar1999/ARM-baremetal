@@ -8,7 +8,7 @@
 
 // reset values, missing values denote that reset value is kept unknown
 #define STK_CSR_RV		0x00000004U
-#define STK_RVR_RV		16000000U 	/*24 bit timer, set countdown to approx 2 seconds*/  
+#define STK_RVR_RV		16000000U 	/*24 bit timer, set countdown to approx 160000000 rvr value = 2 seconds*/  
 #define STK_CVR_RV		0x00000000U /* clear current value register */   
 #define STK_CALIB_RV 	0x00000000U
 

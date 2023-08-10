@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-void reset(uint8_t pin);
+void configure_gpio(uint8_t pin);
 void blink(uint8_t pin);
 
 #endif

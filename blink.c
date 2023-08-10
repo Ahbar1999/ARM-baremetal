@@ -94,7 +94,7 @@ extern uint8_t systick_configured;
 
 volatile uint32_t* ICSR = (uint32_t*)(0xE000ED00 + 0x04);
 
-void reset(uint8_t pin) {
+void configure_gpio(uint8_t pin) {
 	// enable port A
 	/*	
 	*RCC_AHBENR &= RCC_AHBENR_RESET_VALUE;   	

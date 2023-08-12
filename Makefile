@@ -14,7 +14,7 @@ LDFLAGS= -nostdlib -T stm32f0_ls.ld -Wl,-Map=final.map
 # command:<targets>
 # 'make all' will build all the given targets
 # currently we have only one target
-all: main.o blink.o stm32f0_startup.o systick.o usart.o final.elf
+all: main.o gpio.o stm32f0_startup.o systick.o usart.o final.elf
 
 # 	NOTES ON SYNTAX etc.
 # 	target: dependency
@@ -25,7 +25,7 @@ all: main.o blink.o stm32f0_startup.o systick.o usart.o final.elf
 
 # run compiler
 
-blink.o:blink.c
+gpio.o:gpio/gpio.c
 	$(CC) $(CFLAGS) -o $@ $^
 
 main.o:main.c
@@ -41,7 +41,7 @@ usart.o:uart/usart.c
 	$(CC) $(CFLAGS) -o $@ $^
 
 # build target from linker
-final.elf: main.o blink.o systick.o usart.o stm32f0_startup.o
+final.elf: main.o gpio.o systick.o usart.o stm32f0_startup.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 # load command to download target on board

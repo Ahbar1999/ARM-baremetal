@@ -1,6 +1,6 @@
 #include <stdint.h>
-#include "blink.h"
-#include "systick.h"
+#include "../systick.h"
+#include "gpio.h"
 
 #define GPIOA_START				0x48000000
 // on board led is connected to PORT C
@@ -47,9 +47,10 @@
 
 #define RCC_START 					0x40021000
 #define RCC_AHBENR_RESET_VALUE		0x00000014
+#define RCC_APB2ENR_RESET_VALUE		0x00000000
 
-enum GPIO_MODE {IP_MODE, GP_OP_MODE, AF_MODE, AN_MODE};
-enum GPIO_OTYPE {OP_PUSH_PULL, OP_OPEN_DRAIN};
+enum GPIO_MODE {GP_IP_MODE, GP_OP_MODE, GP_AF_MODE, GP_AN_MODE};
+enum GPIO_OTYPE {OT_PUSH_PULL, OT_OPEN_DRAIN};
 enum GPIO_OSPEED {LOW, MEDIUM, HIGH};
 enum GPIO_PUPD {NONE, PULL_UP, PULL_DOWN, RESERVED};
 enum GPIO_BS {NO_ACTION_BS, SET};
@@ -57,6 +58,7 @@ enum GPIO_BR {NO_ACTION_BR, RESET};
 
 // To enable clock on PORTA
 uint32_t volatile *RCC_AHBENR 		= 	(uint32_t*)(RCC_START + 0x14);
+uint32_t volatile *RCC_APB2ENR 		= 	(uint32_t*)(RCC_START + 0x18);
 
 uint32_t volatile *GPIOA_MODER 		=  	(uint32_t*)(GPIOA_START + GPIO_MODER_OFFSET);  
 uint32_t volatile *GPIOA_OTYPER 	= 	(uint32_t*)(GPIOA_START + GPIO_OTYPER_OFFSET);
@@ -84,9 +86,10 @@ uint32_t volatile *GPIOC_LCKR 	=  		(uint32_t*)(GPIOC_START + GPIO_LCKR_OFFSET);
 uint32_t volatile *GPIOC_AFRL	=  		(uint32_t*)(GPIOC_START + GPIO_AFRL_OFFSET); 
 uint32_t volatile *GPIOC_AFRH 	=  		(uint32_t*)(GPIOC_START + GPIO_AFRH_OFFSET);
 
-// PORT clock enable bit positions 
-#define RCC_RCC_AHBENR_IOPAEN 17
-#define RCC_RCC_AHBENR_IOPCEN 19
+// GPIO clock enable bit positions 
+#define RCC_AHBENR_IOPAEN 		17
+#define RCC_AHBENR_IOPCEN 		19
+#define RCC_APB2ENR_USART1EN	14
 
 extern volatile uint32_t* STK_CVR;
 extern volatile uint32_t* STK_CSR;
@@ -94,16 +97,30 @@ extern uint8_t systick_configured;
 
 volatile uint32_t* ICSR = (uint32_t*)(0xE000ED00 + 0x04);
 
-void configure_gpio(uint8_t pin) {
-	// enable port A
-	/*	
-	*RCC_AHBENR &= RCC_AHBENR_RESET_VALUE;   	
-	*RCC_AHBENR |= 1 << RCC_RCC_AHBENR_IOPAEN;	
-	*/
-	*RCC_AHBENR = RCC_AHBENR_RESET_VALUE;   	
-	*RCC_AHBENR |= 1 << RCC_RCC_AHBENR_IOPCEN;	
+void reset_gpio() {
+	*RCC_AHBENR = RCC_AHBENR_RESET_VALUE;
+	*RCC_APB2ENR = RCC_APB2ENR_RESET_VALUE;	// has same reset values as ahbenr 0x00000000
+	
+	// enable ports and peripherals
+	*RCC_AHBENR |= 1 << RCC_AHBENR_IOPAEN;		// enable port A	
+	*RCC_AHBENR |= 1 << RCC_AHBENR_IOPCEN;		// enable port B
+	*RCC_APB2ENR |= 1 << RCC_APB2ENR_USART1EN;	// enable peripheral usart1
 	// wait until its enabled	
 	// while(!(*RCC_AHBENR & ((1 << RCC_RCC_AHBENR_IOPCEN) != (1 << RCC_RCC_AHBENR_IOPCEN))));
+
+	*GPIOA_MODER 	= 		GPIOA_MODER_RESET_VALUE;
+	*GPIOA_OTYPER 	=		GPIOA_OTYPER_RESET_VALUE;	
+	*GPIOA_OSPEEDR 	=		GPIOA_OSPEEDR_RESET_VALUE;  	
+	*GPIOA_PUPDR 	=		GPIOA_PUPDR_RESET_VALUE; 
+	*GPIOA_IDR_WRITE=		GPIOA_IDR_RESET_VALUE; 
+	*GPIOA_ODR		=		GPIOA_ODR_RESET_VALUE; 
+	*GPIOA_BSR 		=		GPIOA_BSR_RESET_VALUE;
+	*GPIOA_BRR 		=		GPIOA_BRR_RESET_VALUE;
+	*GPIOA_LCKR 	=		GPIOA_LCKR_RESET_VALUE; 
+	*GPIOA_AFRL		=		GPIOA_AFRL_RESET_VALUE; 
+	*GPIOA_AFRH 	=		GPIOA_AFRH_RESET_VALUE; 	
+	*GPIOA_AFRL		=		GPIOA_AFRL_RESET_VALUE; 
+	
 
 	*GPIOC_MODER 	= 		GPIOC_MODER_RESET_VALUE;
 	*GPIOC_OTYPER 	=		GPIOC_OTYPER_RESET_VALUE;	
@@ -120,29 +137,71 @@ void configure_gpio(uint8_t pin) {
 	
 	*ICSR			=		0x00000000;
 	
-	// some are being shifted twice because some registers accept 2 bit value for each pin 	
-	*GPIOC_MODER 	|= GP_OP_MODE << pin * 2;
-	*GPIOC_OTYPER 	|= OP_PUSH_PULL << pin;	
-	*GPIOC_OSPEEDR 	|= MEDIUM << pin * 2;  	
-	*GPIOC_PUPDR 	|= PULL_DOWN << pin * 2;
-	// set the given pin number bit in the bit set register which will write for the same pin in ODR 
-	*GPIOC_BSR 		|= SET << pin; 	 
-	
 	// call enable_systick from systick.h
-	configure_systick();
+	if (!systick_configured) {
+		configure_systick();
+	}
 }
 
-void blink(uint8_t pin) {
-	
-	// default clk speed is 8MHz(HSI) => 125,000 cycles per 1 second 
-	// systick set to 250,000		
-	// check if counter was reset since we last checked
-	/*	
-	if (systick_configured && (*STK_CSR) & (1 << 16)) {
-		// toggle operation
-		*GPIOC_ODR ^= (1 << pin);
+// private
+void set_pin_mode(volatile uint32_t* GPIOX_MODER, uint8_t pin,enum GPIO_MODE mode) {
+	// this only works because initially all bits in MODE register are zero
+	// otherwise you would need to set individuals to 0 and 1 because OR wouldnt work in the case 
+	// there are bits which are not 0 that you are trying to change
+	*GPIOX_MODER |= mode << pin * 2;
+}
+
+// private
+void set_pin_otype(volatile uint32_t* GPIOX_OTYPER, uint8_t pin,enum GPIO_OTYPE otype) {
+	*GPIOX_OTYPER |= otype << pin;	
+}
+
+// private
+void set_pin_ospeed(volatile uint32_t* GPIOX_OSPEEDR, uint8_t pin,enum GPIO_OSPEED speed) {
+	*GPIOX_OSPEEDR 	|= speed << pin * 2;  	
+}
+
+// private
+void set_pin_pupd(volatile uint32_t* GPIOX_PUPDR, uint8_t pin,enum GPIO_PUPD pupd) {
+	*GPIOX_PUPDR |= pupd << pin * 2;
+}
+
+void configure_pin(uint8_t pin, uint8_t mode, uint8_t port) {
+	// some are being shifted twice because some registers accept 2 bit value for each pin
+	switch (port) {
+		case 0:
+			set_pin_mode(GPIOA_MODER, pin, mode);
+			set_pin_otype(GPIOA_OTYPER, pin, OT_PUSH_PULL);	// let it be default rest value
+			set_pin_ospeed(GPIOA_MODER, pin, MEDIUM);
+			set_pin_pupd(GPIOA_PUPDR, pin, PULL_DOWN);
+			break;
+		case 1:
+			break;
+		case 2:
+			// __asm volatile("BKPT");
+			set_pin_mode(GPIOC_MODER, pin, mode);
+			set_pin_otype(GPIOC_OTYPER, pin, OT_PUSH_PULL);	// let it be default rest value
+			// set_pin_ospeed(GPIOC_MODER, pin, LOW);		// dont set it to HIGH, LOW is default so need to set
+			set_pin_pupd(GPIOC_PUPDR, pin, PULL_DOWN);
+			break;
+	}	
+	// set the given pin number bit in the bit set register which will write for the same pin in ODR 
+	// *GPIOC_BSR 		|= SET << pin; 	 
+}
+
+void toggle_pin(uint8_t pin, uint8_t port) {	
+	switch (port) {
+		case 0:
+			*GPIOA_ODR ^= (1 << pin);
+			break;
+		case 1:
+			// GPIOB not implemented yet
+			// *GPIOB_ODR ^= (1 << pin);
+			break;
+		case 2:
+			// __asm volatile("BKPT");
+			*GPIOC_ODR ^= (1 << pin);
+			break;
 	}
-	*/
-	*GPIOC_ODR ^= (1 << pin);
 }
 

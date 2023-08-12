@@ -12,7 +12,6 @@
 
 #include <stdint.h>
 #include "main.h"
-#include "blink.h"
 
 /* IMPORTANT: 	Note that linker symbols are always memory locations and not 'values'. 
  * 				You can get the address of a symbol but you cant access its value

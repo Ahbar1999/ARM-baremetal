@@ -49,6 +49,11 @@
 #define RCC_AHBENR_RESET_VALUE		0x00000014
 #define RCC_APB2ENR_RESET_VALUE		0x00000000
 
+#define AF0 0b0000
+#define AF1 0b0001
+#define AF2 0b0011
+#define AF3 0b0100
+
 enum GPIO_MODE {GP_IP_MODE, GP_OP_MODE, GP_AF_MODE, GP_AN_MODE};
 enum GPIO_OTYPE {OT_PUSH_PULL, OT_OPEN_DRAIN};
 enum GPIO_OSPEED {LOW, MEDIUM, HIGH};
@@ -166,13 +171,18 @@ void set_pin_pupd(volatile uint32_t* GPIOX_PUPDR, uint8_t pin,enum GPIO_PUPD pup
 	*GPIOX_PUPDR |= pupd << pin * 2;
 }
 
-void configure_pin(uint8_t pin, uint8_t mode, uint8_t port) {
+void configure_pin(uint8_t pin, enum GPIO_MODE mode, uint8_t port) {
 	// some are being shifted twice because some registers accept 2 bit value for each pin
 	switch (port) {
 		case 0:
-			set_pin_mode(GPIOA_MODER, pin, mode);
-			set_pin_otype(GPIOA_OTYPER, pin, OT_PUSH_PULL);	// let it be default rest value
-			set_pin_ospeed(GPIOA_MODER, pin, MEDIUM);
+			set_pin_mode(GPIOA_MODER, pin, mode);	
+			// AF function
+			if (mode == GP_AF_MODE) {
+				// HARDCODED: for pin 9, configuration bits start form index 4
+				*GPIOA_AFRH |= AF1 << 4; 
+			}	
+			set_pin_otype(GPIOA_OTYPER, pin, OT_PUSH_PULL);	
+			// set_pin_ospeed(GPIOA_MODER, pin, MEDIUM);
 			set_pin_pupd(GPIOA_PUPDR, pin, PULL_DOWN);
 			break;
 		case 1:
@@ -180,6 +190,11 @@ void configure_pin(uint8_t pin, uint8_t mode, uint8_t port) {
 		case 2:
 			// __asm volatile("BKPT");
 			set_pin_mode(GPIOC_MODER, pin, mode);
+			// AF function
+			if (mode == GP_AF_MODE) {
+				// for pin 9, configuration bits start form index 4
+				*GPIOC_AFRH |= AF1 << 4; 
+			}	
 			set_pin_otype(GPIOC_OTYPER, pin, OT_PUSH_PULL);	// let it be default rest value
 			// set_pin_ospeed(GPIOC_MODER, pin, LOW);		// dont set it to HIGH, LOW is default so need to set
 			set_pin_pupd(GPIOC_PUPDR, pin, PULL_DOWN);

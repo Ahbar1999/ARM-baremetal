@@ -14,17 +14,17 @@
 #define USART_RDR_OFFSET 	0x24
 #define USART_TDR_OFFSET 	0x28
 
-#define USART_CR1_RV 	0x00
-#define USART_CR2_RV 	0x00
-#define USART_CR3_RV 	0x00
-#define USART_BRR_RV 	0x00
-#define USART_GTPR_RV 	0x00
-#define USART_RTOR_RV 	0x00
-#define USART_RQR_RV 	0x00
+#define USART_CR1_RV 	0x00U
+#define USART_CR2_RV 	0x00U
+#define USART_CR3_RV 	0x00U
+#define USART_BRR_RV 	0x00U
+#define USART_GTPR_RV 	0x00U
+#define USART_RTOR_RV 	0x00U
+#define USART_RQR_RV 	0x00U
 #define USART_ISR_RV 	0x020000C0
-#define USART_ICR_RV 	0x00
-#define USART_RDR_RV 	0x00
-#define USART_TDR_RV 	0x00
+#define USART_ICR_RV 	0x00U
+#define USART_RDR_RV 	0x00U
+#define USART_TDR_RV 	0x00U
 
 // defined in gpio.c
 // #define RCC_APB2ENR_RV	0x00000000	
@@ -66,33 +66,37 @@ void configure_usart(uint16_t baud_rate) {
 	// enable USART, done in gpio	
 	// *RCC_APB2ENR |= 1 << 14;
 	
-	// for 7 + 1 codeword length M[1:0] = 10;
-	*USART1_CR1 |= 1 << 28;
-	*USART1_CR1 |= 1 << 12;
-	*USART1_BRR |= baud_rate;
+	// for 8 + 1 codeword length M[1:0] = 00; (reset value)
+	// *USART1_CR1 |= 1 << 28;
+	// *USART1_CR1 |= 1 << 12;
+	*USART1_BRR = baud_rate;
 	// stop bits = 00;
 	
-	*USART1_CR1 |= 1 << 0; 	// USART enable, UE = 1
-	
+	*USART1_CR1 |= 1 << 0; 	// USART enable, UE = 1	
 	usart_configured = 1;
+	*USART1_CR1 |= 1 << 3;	// Tx enable, TXE = 1, send idle frame
 } 
 
 // takes in pointer to buf, we only need 8 bits because we are transmitting ascii + 1 start bit 
-void send_message(uint8_t* buf, uint32_t size) {
-	*USART1_CR1 |= 1 << 3;	// Tx enable, TXE = 1, send idle frame
-	while (size > 0) {	
-		// check TC bit, if it is 1 or not  
+void send_message(uint8_t* buf, uint32_t size) {	
+	while (size > 0) {
+		// check TC bit, if it is 1 or not
 		if ((*USART1_ISR & (1 << 6))) {	
 			size--;	
 			// fill tdr with new data
-			*USART1_TDR = *buf++;
+			*USART1_TDR = *buf++;	
 			// __asm volatile("BKPT");
 		}
+	}
+	// check TC bit, if it is 1 or not
+	if ((*USART1_ISR & (1 << 6))) {	
+		// request break character
+		*USART1_RQR	|= 1 << 1; 
 	}
 	// clear the tranmission complete clear flag, TCCF
 	// to indicate that transmission is completed
 	// this will set the TC flag in the ISR register 	
 	*USART1_ICR |= (1 << 6);
 	// wait until TC bit = 1 
-	while (!(*USART1_ISR & (1 << 6)));
+	while ((*USART1_ISR & (1 << 6)) == 0);
 }

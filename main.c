@@ -12,7 +12,7 @@
 #define SCB_SHPR3_RV		0x00000000U
 
 // fck = 8MHz, 9600 baud rate, USARTDIV = BAUD RATE = 0x0341
-#define BAUD_RATE 			(8000000) / 9600;	
+#define BAUD_RATE 			(8000000) / 9600	
 
 volatile uint32_t* ISER = (uint32_t*)ISER_ADDR;	// for enabling any non-system interrupts 
 volatile uint32_t* SCB_SHPR2 = (uint32_t*)(SCB_START_ADDR + SCB_SHPR2_OFFSET);  
@@ -25,7 +25,7 @@ uint8_t timer_counter = 0;
 const uint8_t LED = 9;	// PC9
 const uint8_t USART1_TX = 9;	//PA9 
 
-uint8_t message[] = {'c', 'o', 'u', 'n', 't', 'e', 'r', ':', ' ', 0, '\0'};
+uint8_t message[] = {'c', 'o', 'u', 'n', 't', 'e', 'r', ':', ' ', 0, '\0', '\n'};
 extern volatile uint8_t usart_configured;
 
 #define GPIOA 0
@@ -75,12 +75,13 @@ int main(void) {
 	// configure pins
 	// you also need to tell which GPIO it is, A, B, C etc
 	configure_pin(LED, 1, GPIOC);
+	
+	configure_usart(BAUD_RATE);
 	// 2: AF(alternate function) mode
 	configure_pin(USART1_TX, 2, GPIOA);
 	// uncomment when rx pin is required	
 	// configure_pin(USART1_RX, 0);
 	
-	configure_usart(BAUD_RATE);
 
 	while(1);
     

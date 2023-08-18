@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include "usart.h"
 
+// #define CARRIAGE_RET		0x0D	
 #define USART1_START_ADDR 	0x40013800
 #define USART_CR1_OFFSET 	0x00
 #define USART_CR2_OFFSET 	0x04
@@ -26,6 +27,7 @@
 #define USART_RDR_RV 	0x00U
 #define USART_TDR_RV 	0x00U
 
+#define RXNE	5
 // defined in gpio.c
 // #define RCC_APB2ENR_RV	0x00000000	
 
@@ -46,6 +48,8 @@ volatile uint32_t* USART1_TDR  = (uint32_t*)(USART1_START_ADDR + USART_TDR_OFFSE
 
 // volatile uint32_t* RCC_APB2ENR = (uint32_t*)(RCC_START + RCC_APB2ENR_OFFSET);
 extern volatile uint8_t usart_configured = 0;
+// buffer for receiving and sending data
+uint8_t recv_buf[100];
 
 // USARTDIV = baud rate = 0x0341H, for baud rate = 9600
 void configure_usart(uint16_t baud_rate) {
@@ -75,6 +79,7 @@ void configure_usart(uint16_t baud_rate) {
 	*USART1_CR1 |= 1 << 0; 	// USART enable, UE = 1	
 	usart_configured = 1;
 	*USART1_CR1 |= 1 << 3;	// Tx enable, TXE = 1, send idle frame
+	*USART1_CR1 |= 1 << 2;	// Rx enable, RE = 1, start seaching for start bit	
 } 
 
 // takes in pointer to buf, we only need 8 bits because we are transmitting ascii + 1 start bit 
@@ -88,15 +93,73 @@ void send_message(uint8_t* buf, uint32_t size) {
 			// __asm volatile("BKPT");
 		}
 	}
-	// check TC bit, if it is 1 or not
-	if ((*USART1_ISR & (1 << 6))) {	
-		// request break character
-		*USART1_RQR	|= 1 << 1; 
-	}
+	
+	// check for TXE clear 
+	// while ((*USART1_ISR & (1 << 7)) == 0);	
+	// send break character, find out the purpose first	
+	// *USART1_RQR	|= 1 << 1; 
+	
 	// clear the tranmission complete clear flag, TCCF
 	// to indicate that transmission is completed
-	// this will set the TC flag in the ISR register 	
+	// this will set the TC flag in the ISR register
 	*USART1_ICR |= (1 << 6);
-	// wait until TC bit = 1 
-	while ((*USART1_ISR & (1 << 6)) == 0);
+}
+
+void recv_message() {
+	// wait while data not recvd
+	while (((*USART1_ISR) & (1 << RXNE)) == 0);
+	
+	// read the contents of RDR register 
+	// recv_buf = (uint8_t)(*USART1_RDR);	
+	// send_message(&recv_buf, sizeof(recv_buf));
+} 
+
+#define RXNEIE	5
+#define TXEIE	7
+
+void uart_enable_interrupt(uint8_t uart_x, uint8_t recv) {
+	if (recv) {
+		// enable reciever interrupt
+		*USART1_CR1 |= 1 << RXNEIE; 	
+	} else {
+		// enable tx interrupt
+		*USART1_CR1 |= 1 << TXEIE; 	
+	}
+}
+
+void UART1_Handler() {
+	__asm volatile("BKPT");
+	
+	// echo
+	recv_message();
+	send_message(recv_buf, sizeof(recv_buf));
+}
+
+void echo() {	
+	uint8_t i;
+	while(1) {
+		// recv
+		i = 0;
+		// wait while data not recvd
+		while ((*USART1_ISR & (1 << RXNE))) {
+			// read the contents of RDR register 
+			recv_buf[i++] = (uint8_t)(*USART1_RDR);
+			// stop reading on recieving ENTER character
+			if (recv_buf[i - 1] == '\r') break;
+		}
+
+		// transmit
+		uint8_t size = i;
+		i = 0;
+		while (size > 0) {
+			// check TC bit, if it is 1 or not
+			if ((*USART1_ISR & (1 << 6))) {	
+				size--;	
+				*USART1_TDR = recv_buf[i++];	
+			}
+		}
+
+		while ((*USART1_ISR & (1 << 6)) == 0);	
+		*USART1_ICR |= (1 << 6);
+	}
 }

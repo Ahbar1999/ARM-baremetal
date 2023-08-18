@@ -56,9 +56,8 @@ void SVCall_Handler(void) __attribute__((weak, alias("Default_Handler")));
 void PendSV_Handler(void) __attribute__((weak, alias("Default_Handler")));
 void SysTick_Handler(void) __attribute__((weak, alias("Default_Handler")));
 
-/* System interrupt handlers have been written
- * Leaving rest of the interrupt handlers to be written later
- * */
+void UART1_Handler(void) __attribute__((weak, alias("Default_Handler")));
+
 uint32_t vectors[] __attribute__((section(".isr_vector"))) = {
 	STACK_START,
 	(uint32_t)Reset_Handler,
@@ -77,6 +76,38 @@ uint32_t vectors[] __attribute__((section(".isr_vector"))) = {
 	0,
 	(uint32_t)PendSV_Handler,
 	(uint32_t)SysTick_Handler,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	(uint32_t)UART1_Handler,
+	0,
+	0,
+	0,
+	0,
 };
 
 void Default_Handler(void) {

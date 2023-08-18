@@ -20,12 +20,12 @@ volatile uint32_t* SCB_SHPR3 = (uint32_t*)(SCB_START_ADDR + SCB_SHPR3_OFFSET);
 
 // uint32_t init_var = 1;
 // uint32_t uninit_var;
-uint8_t timer_counter = 0;
 // Pin PC9 -> LD3 led
 const uint8_t LED = 9;	// PC9
 const uint8_t USART1_TX = 9;	//PA9 
+const uint8_t USART1_RX = 10;	// PA10
 
-uint8_t message[] = {'c', 'o', 'u', 'n', 't', 'e', 'r', ':', ' ', 0, '\0', '\n'};
+uint8_t message[] = {'c', 'o', 'u', 'n', 't', 'e', 'r', ':', ' ', 0, '\r'};
 extern volatile uint8_t usart_configured;
 
 #define GPIOA 0
@@ -39,13 +39,10 @@ void SysTick_Handler(void) {
 	// __asm volatile("BKPT");
 	toggle_pin(LED, GPIOC);
 	
-	message[10]	= ++timer_counter;
+	message[9] += 1;
 	if (usart_configured) {
-		send_message(message, sizeof(message));	
-	} else {
-		// breakpoint if send_message called on unconfigured usart 
-		__asm volatile("BKPT");
-	} 
+		send_message(message, sizeof(message));
+	}
 }
 
 void NMI_Handler(void) {
@@ -79,10 +76,11 @@ int main(void) {
 	configure_usart(BAUD_RATE);
 	// 2: AF(alternate function) mode
 	configure_pin(USART1_TX, 2, GPIOA);
-	// uncomment when rx pin is required	
-	// configure_pin(USART1_RX, 0);
-	
+	configure_pin(USART1_RX, 2, GPIOA);
 
+	// enable interrupt on uart1
+	// uart_enable_interrupt(0);
+	// echo();
 	while(1);
     
 	return 0;

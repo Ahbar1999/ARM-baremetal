@@ -167,33 +167,51 @@ void set_pin_ospeed(volatile uint32_t* GPIOX_OSPEEDR, uint8_t pin,enum GPIO_OSPE
 }
 
 // private
-void set_pin_pupd(volatile uint32_t* GPIOX_PUPDR, uint8_t pin,enum GPIO_PUPD pupd) {
+void set_pin_pupd(volatile uint32_t* GPIOX_PUPDR, uint8_t pin, enum GPIO_PUPD pupd) {
 	*GPIOX_PUPDR |= pupd << pin * 2;
 }
 
+#define AFRL_BASE_PIN 0
+#define AFRH_BASE_PIN 8
+
+void set_AF_reg(uint8_t port, uint8_t pin, uint8_t AFx) {
+	switch (port) {
+		// code for PORTA only currently
+		case 0:
+			if (pin <= 7) {
+				*GPIOA_AFRL |= AFx << ((pin - AFRL_BASE_PIN) * 4);
+			} else {
+				*GPIOA_AFRH |= AFx << ((pin - AFRH_BASE_PIN) * 4);
+			} 
+	} 
+}
+		
 void configure_pin(uint8_t pin, enum GPIO_MODE mode, uint8_t port) {
 	// some are being shifted twice because some registers accept 2 bit value for each pin
 	switch (port) {
+		// GPIOA
 		case 0:
 			set_pin_mode(GPIOA_MODER, pin, mode);	
 			// AF function
-			if (mode == GP_AF_MODE) {
-				// HARDCODED: for pin 9, configuration bits start form index 4
-				*GPIOA_AFRH |= AF1 << 4; 
+			if (mode == GP_AF_MODE) { 
+				// AF1 = uart
+				set_AF_reg(port, pin, AF1);
 			}	
 			set_pin_otype(GPIOA_OTYPER, pin, OT_PUSH_PULL);	
 			// set_pin_ospeed(GPIOA_MODER, pin, MEDIUM);
 			set_pin_pupd(GPIOA_PUPDR, pin, PULL_DOWN);
 			break;
+		// GPIOB	
 		case 1:
 			break;
+		// GPIOC
 		case 2:
 			// __asm volatile("BKPT");
 			set_pin_mode(GPIOC_MODER, pin, mode);
 			// AF function
 			if (mode == GP_AF_MODE) {
 				// for pin 9, configuration bits start form index 4
-				*GPIOC_AFRH |= AF1 << 4; 
+				set_AF_reg(port, pin, AF1);
 			}	
 			set_pin_otype(GPIOC_OTYPER, pin, OT_PUSH_PULL);	// let it be default rest value
 			// set_pin_ospeed(GPIOC_MODER, pin, LOW);		// dont set it to HIGH, LOW is default so need to set

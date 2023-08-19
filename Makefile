@@ -46,8 +46,9 @@ final.elf: main.o gpio.o systick.o usart.o stm32f0_startup.o
 
 # load command to download target on board
 load:
-	openocd -f board_cfg_files/stm32f0discovery.cfg
-
+	wt openocd -f board_cfg_files/stm32f0discovery.cfg
+	wt putty.exe -load "openocd"
+	wt putty.exe -serial $(port)
 clean:
 	rm -rf *.o *.elf
 

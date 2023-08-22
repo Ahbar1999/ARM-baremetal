@@ -197,9 +197,9 @@ void configure_pin(uint8_t pin, enum GPIO_MODE mode, uint8_t port) {
 				// AF1 = uart
 				set_AF_reg(port, pin, AF1);
 			}	
-			set_pin_otype(GPIOA_OTYPER, pin, OT_PUSH_PULL);	
+			// set_pin_otype(GPIOA_OTYPER, pin, OT_PUSH_PULL);	
 			// set_pin_ospeed(GPIOA_MODER, pin, MEDIUM);
-			set_pin_pupd(GPIOA_PUPDR, pin, PULL_DOWN);
+			// set_pin_pupd(GPIOA_PUPDR, pin, PULL_DOWN);
 			break;
 		// GPIOB	
 		case 1:
@@ -210,7 +210,7 @@ void configure_pin(uint8_t pin, enum GPIO_MODE mode, uint8_t port) {
 			set_pin_mode(GPIOC_MODER, pin, mode);
 			// AF function
 			if (mode == GP_AF_MODE) {
-				// for pin 9, configuration bits start form index 4
+				// for pin 9, configuration bits start form index 4 in AFRH
 				set_AF_reg(port, pin, AF1);
 			}	
 			set_pin_otype(GPIOC_OTYPER, pin, OT_PUSH_PULL);	// let it be default rest value

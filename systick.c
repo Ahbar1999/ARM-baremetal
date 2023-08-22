@@ -30,8 +30,8 @@ void configure_systick() {
 	// configure, ENABLE CSR, rest of the values are default, clock: system
 	// 0b11
 	// __asm volatile("BKPT #0");	
-	// *STK_CSR	|= 1 << 0;	// enable systick	
-	*STK_CSR 	|= 3 << 0; // enable ISR and enable systick finally; this lien is not the problem
+	// *STK_CSR	|= 1 << 1;	// enable ISR	
+	*STK_CSR 	|= 1 << 0; // and enable systick finally
 
 	// __asm volatile("BKPT #1");	
 } 

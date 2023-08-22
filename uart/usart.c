@@ -140,12 +140,14 @@ void echo() {
 	while(1) {
 		// recv
 		i = 0;
-		// wait while data not recvd
-		while ((*USART1_ISR & (1 << RXNE))) {
-			// read the contents of RDR register 
-			recv_buf[i++] = (uint8_t)(*USART1_RDR);
-			// stop reading on recieving ENTER character
-			if (recv_buf[i - 1] == '\r') break;
+		// wait for data reception initiation or until we receieve return character 
+		while (i == 0 || recv_buf[i - 1] != '\r') {
+			// check if data available
+			if (*USART1_ISR & (1 << RXNE)) {
+				// __asm volatile("BKPT");
+				// read the contents of RDR register 
+				recv_buf[i++] = (uint8_t)(*USART1_RDR);
+			}		
 		}
 
 		// transmit
@@ -158,8 +160,8 @@ void echo() {
 				*USART1_TDR = recv_buf[i++];	
 			}
 		}
-
-		while ((*USART1_ISR & (1 << 6)) == 0);	
+		// TODO: flush Rx so any unwanted data is not there in the registers
+		// while ((*USART1_ISR & (1 << 6)) == 0);	
 		*USART1_ICR |= (1 << 6);
 	}
 }

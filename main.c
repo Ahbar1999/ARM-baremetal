@@ -38,11 +38,12 @@ void SysTick_Handler(void) {
 	// call blink
 	// __asm volatile("BKPT");
 	toggle_pin(LED, GPIOC);
-	
+	/*	
 	message[9] += 1;
 	if (usart_configured) {
 		send_message(message, sizeof(message));
 	}
+	*/
 }
 
 void NMI_Handler(void) {
@@ -80,7 +81,7 @@ int main(void) {
 
 	// enable interrupt on uart1
 	// uart_enable_interrupt(0);
-	// echo();
+	echo();
 	while(1);
     
 	return 0;

@@ -135,6 +135,7 @@ void UART1_Handler() {
 	send_message(recv_buf, sizeof(recv_buf));
 }
 
+const uint8_t flush[] = "\033\143";
 void echo() {	
 	uint8_t i;
 	while(1) {
@@ -149,9 +150,15 @@ void echo() {
 				recv_buf[i++] = (uint8_t)(*USART1_RDR);
 			}		
 		}
+		
+		// flush terminal screen
+		for (uint8_t j = 0; j < sizeof(flush); j++) {
+			while ((*USART1_ISR & (1 << 6)) == 0);
+			*USART1_TDR = flush[j];	
+		}
 
-		// transmit
-		uint8_t size = i;
+		// now transmit data
+		uint8_t size = i + 1;		
 		i = 0;
 		while (size > 0) {
 			// check TC bit, if it is 1 or not
@@ -163,5 +170,10 @@ void echo() {
 		// TODO: flush Rx so any unwanted data is not there in the registers
 		// while ((*USART1_ISR & (1 << 6)) == 0);	
 		*USART1_ICR |= (1 << 6);
+		*USART1_RQR |= (1 << 3);	// Receive data flush request, discard data in the rdr
+		// clear the buffer
+		// __asm volatile("BKPT");
+		// buffer is getting zeroed out but
+		for (int j = 0; j < 100; j++) recv_buf[j] = '\0';
 	}
 }

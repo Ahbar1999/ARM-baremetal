@@ -48,6 +48,7 @@
 #define RCC_START 					0x40021000
 #define RCC_AHBENR_RESET_VALUE		0x00000014
 #define RCC_APB2ENR_RESET_VALUE		0x00000000
+#define RCC_APB1ENR_RESET_VALUE 	0x00000000
 
 #define AF0 0b0000
 #define AF1 0b0001
@@ -61,9 +62,10 @@ enum GPIO_PUPD {NONE, PULL_UP, PULL_DOWN, RESERVED};
 enum GPIO_BS {NO_ACTION_BS, SET};
 enum GPIO_BR {NO_ACTION_BR, RESET};
 
-// To enable clock on PORTA
+// clk enable registers 
 uint32_t volatile *RCC_AHBENR 		= 	(uint32_t*)(RCC_START + 0x14);
 uint32_t volatile *RCC_APB2ENR 		= 	(uint32_t*)(RCC_START + 0x18);
+uint32_t volatile *RCC_APB1ENR 		= 	(uint32_t*)(RCC_START + 0x1C);
 
 uint32_t volatile *GPIOA_MODER 		=  	(uint32_t*)(GPIOA_START + GPIO_MODER_OFFSET);  
 uint32_t volatile *GPIOA_OTYPER 	= 	(uint32_t*)(GPIOA_START + GPIO_OTYPER_OFFSET);
@@ -95,6 +97,7 @@ uint32_t volatile *GPIOC_AFRH 	=  		(uint32_t*)(GPIOC_START + GPIO_AFRH_OFFSET);
 #define RCC_AHBENR_IOPAEN 		17
 #define RCC_AHBENR_IOPCEN 		19
 #define RCC_APB2ENR_USART1EN	14
+#define RCC_APB1ENR_USART2EN	17
 
 extern volatile uint32_t* STK_CVR;
 extern volatile uint32_t* STK_CSR;
@@ -104,12 +107,14 @@ volatile uint32_t* ICSR = (uint32_t*)(0xE000ED00 + 0x04);
 
 void reset_gpio() {
 	*RCC_AHBENR = RCC_AHBENR_RESET_VALUE;
-	*RCC_APB2ENR = RCC_APB2ENR_RESET_VALUE;	// has same reset values as ahbenr 0x00000000
-	
+	*RCC_APB2ENR = RCC_APB2ENR_RESET_VALUE;	// has same reset values as ahbenr 0x00000000	
+	*RCC_APB1ENR = RCC_APB1ENR_RESET_VALUE;	// has same reset values as ahbenr 0x00000000
+											//
 	// enable ports and peripherals
 	*RCC_AHBENR |= 1 << RCC_AHBENR_IOPAEN;		// enable port A	
 	*RCC_AHBENR |= 1 << RCC_AHBENR_IOPCEN;		// enable port B
-	*RCC_APB2ENR |= 1 << RCC_APB2ENR_USART1EN;	// enable peripheral usart1
+	*RCC_APB2ENR |= 1 << RCC_APB2ENR_USART1EN;	// enable peripheral usart1	
+	*RCC_APB1ENR |= 1 << RCC_APB1ENR_USART2EN;	// enable peripheral usart2
 	// wait until its enabled	
 	// while(!(*RCC_AHBENR & ((1 << RCC_RCC_AHBENR_IOPCEN) != (1 << RCC_RCC_AHBENR_IOPCEN))));
 

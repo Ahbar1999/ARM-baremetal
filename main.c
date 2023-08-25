@@ -12,7 +12,8 @@
 #define SCB_SHPR3_RV		0x00000000U
 
 // fck = 8MHz, 9600 baud rate, USARTDIV = BAUD RATE = 0x0341
-#define BAUD_RATE 			(8000000) / 9600	
+#define BAUD_RATE1			(8000000) / 9600	
+#define BAUD_RATE2			(8000000) / 115200
 
 volatile uint32_t* ISER = (uint32_t*)ISER_ADDR;	// for enabling any non-system interrupts 
 volatile uint32_t* SCB_SHPR2 = (uint32_t*)(SCB_START_ADDR + SCB_SHPR2_OFFSET);  
@@ -20,13 +21,18 @@ volatile uint32_t* SCB_SHPR3 = (uint32_t*)(SCB_START_ADDR + SCB_SHPR3_OFFSET);
 
 // uint32_t init_var = 1;
 // uint32_t uninit_var;
+// PIN DEFINITIONS
 // Pin PC9 -> LD3 led
 const uint8_t LED = 9;	// PC9
 const uint8_t USART1_TX = 9;	//PA9 
 const uint8_t USART1_RX = 10;	// PA10
+const uint8_t USART2_TX = 2;	//PA2 
+const uint8_t USART2_RX = 3;	// PA3
+
 
 uint8_t message[] = {'c', 'o', 'u', 'n', 't', 'e', 'r', ':', ' ', 0, '\r'};
-extern volatile uint8_t usart_configured;
+extern volatile uint8_t usart1_configured;
+extern volatile uint8_t usart2_configured;
 
 #define GPIOA 0
 #define GPIOB 1 
@@ -74,11 +80,14 @@ int main(void) {
 	// you also need to tell which GPIO it is, A, B, C etc
 	configure_pin(LED, 1, GPIOC);
 	
-	configure_usart(BAUD_RATE);
+	configure_usart1(BAUD_RATE1);
+	configure_usart2(BAUD_RATE2);
 	// 2: AF(alternate function) mode
 	configure_pin(USART1_TX, 2, GPIOA);
 	configure_pin(USART1_RX, 2, GPIOA);
-
+	
+	configure_pin(USART2_TX, 2, GPIOA);
+	configure_pin(USART2_RX, 2, GPIOA);	
 	// enable interrupt on uart1
 	// uart_enable_interrupt(0);
 	echo();

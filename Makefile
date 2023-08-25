@@ -50,7 +50,8 @@ load:
 	# wt allows running commands in a new terminal window(on windows only)
 	wt openocd -f board_cfg_files/stm32f0discovery.cfg
 	wt putty.exe -load "openocd"
-	wt putty.exe -serial $(port)
+	# wt putty.exe -load "serial"
+	# wt putty.exe -serial $(port) -sercfg 9600,8,n,1,N
 clean:
 	rm -rf *.o *.elf
 

@@ -34,4 +34,5 @@ void configure_systick() {
 	*STK_CSR 	|= 1 << 0; // and enable systick finally
 
 	// __asm volatile("BKPT #1");	
-} 
+}
+

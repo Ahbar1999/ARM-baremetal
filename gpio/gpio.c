@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include "../systick.h"
 #include "gpio.h"
 
 #define GPIOA_START				0x48000000
@@ -99,10 +98,6 @@ uint32_t volatile *GPIOC_AFRH 	=  		(uint32_t*)(GPIOC_START + GPIO_AFRH_OFFSET);
 #define RCC_APB2ENR_USART1EN	14
 #define RCC_APB1ENR_USART2EN	17
 
-extern volatile uint32_t* STK_CVR;
-extern volatile uint32_t* STK_CSR;
-extern uint8_t systick_configured;
-
 volatile uint32_t* ICSR = (uint32_t*)(0xE000ED00 + 0x04);
 
 void reset_gpio() {
@@ -146,11 +141,6 @@ void reset_gpio() {
 	*GPIOC_AFRL		=		GPIOC_AFRL_RESET_VALUE; 
 	
 	*ICSR			=		0x00000000;
-	
-	// call enable_systick from systick.h
-	if (!systick_configured) {
-		configure_systick();
-	}
 }
 
 // private

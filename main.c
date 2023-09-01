@@ -2,8 +2,8 @@
 #include "main.h"
 #include "gpio/gpio.h"
 #include "uart/usart.h"
-#include "kernel/kernel.h"
 #include "systick.h"
+#include "kernel/kernel.h"
 
 // NVIC configuration
 #define ISER_ADDR  			0xE000E100
@@ -23,7 +23,7 @@
 // number of times Systick is called per second
 // and tick_counter is incremented
 #define TICKS_PER_SEC 1000U
-#define STK_RV = 8000000U / TICKS_PER_SEC;
+#define STK_RV (8000000U / TICKS_PER_SEC)
 
 volatile uint32_t* ISER = (uint32_t*)ISER_ADDR;	// for enabling any non-system interrupts 
 volatile uint32_t* SCB_SHPR2 = (uint32_t*)(SCB_START_ADDR + SCB_SHPR2_OFFSET);  
@@ -58,28 +58,32 @@ void delay(uint32_t duration) {
 }
 
 uint32_t stack1[40];
-OSThread blinky1;
 void Blinky1() {
-	delay(TICKS_PER_SEC / 4);
-	toggle_pin(LED1, GPIOC);
-	delay(TICKS_PER_SEC / 4);
+	while(1) {
+		// __asm volatile("BKPT");
+		delay(TICKS_PER_SEC / 4);
+		toggle_pin(LED1, GPIOC);
+		delay(TICKS_PER_SEC / 4);
+	}
 }
 
 uint32_t stack2[40];
-OSThread blinky2;
 void Blinky2() {
-	delay(TICKS_PER_SEC / 2);
-	toggle_pin(LED2, GPIOC);
-	delay(TICKS_PER_SEC / 2);
+	// __asm volatile("BKPT");
+	while(1) {
+		delay(TICKS_PER_SEC / 2);
+		toggle_pin(LED2, GPIOC);
+		delay(TICKS_PER_SEC / 2);
+	}
 }
 
 void SysTick_Handler(void) {
 	// use BKPT instruction to add a breakpoint here 
 	// toggle operation
 	tick_counter++;	
-	// call blink
-	// __asm volatile("BKPT");
-	// OS_sched();	
+	__asm volatile("CPSID i");
+	OS_sched();
+	__asm volatile("CPSIE i");
 }
 
 void NMI_Handler(void) {
@@ -114,7 +118,7 @@ int main(void) {
 	}
 
 	reset_gpio(); 
-
+	OS_init();
 	// configure pins
 	// you also need to tell which GPIO it is, A, B, C etc
 	configure_pin(LED1, 1, GPIOC);	
@@ -131,21 +135,21 @@ int main(void) {
 	// enable interrupt on uart1
 	// uart_enable_interrupt(0);
 	// echo();
-	OSThread blinky1_thread(stack1);
-	OSThread blinky2_thread(stack2);
-
+	
+	OSThread blinky1_thread;
+	OSThread blinky2_thread;
 	OSThread_start(
 			&blinky1_thread,
-			&blinky1,
+			Blinky1,
 			stack1,
 			sizeof(stack1));
 	
 	OSThread_start(
 		&blinky2_thread,
-		&blinky2,
+		Blinky2,
 		stack2,
 		sizeof(stack2));
-	
+		
 	while(1);
     
 	return 0;

@@ -15,7 +15,7 @@ port= COM7
 # command:<targets>
 # 'make all' will build all the given targets
 # currently we have only one target
-all: main.o gpio.o stm32f0_startup.o systick.o usart.o final.elf
+all: main.o gpio.o stm32f0_startup.o systick.o usart.o kernel.o final.elf
 
 # 	NOTES ON SYNTAX etc.
 # 	target: dependency
@@ -41,8 +41,12 @@ systick.o:systick.c
 usart.o:uart/usart.c
 	$(CC) $(CFLAGS) -o $@ $^
 
+kernel.o:kernel/kernel.c
+	$(CC) $(CFLAGS) -o $@ $^
+
+
 # build target from linker
-final.elf: main.o gpio.o systick.o usart.o stm32f0_startup.o
+final.elf: main.o gpio.o systick.o usart.o kernel.o stm32f0_startup.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 # load command to download target on board

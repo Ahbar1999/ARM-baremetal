@@ -7,32 +7,96 @@
 #define ICSR 0xE000ED04
 #define PENDSVSET 28
 
-/* volatile pointer meaning the value of the pointer variable itself is subject to change */
-OSThread* volatile OS_curr;
-OSThread* volatile OS_next;
+OSThread* volatile OS_curr;	/* current running thread	*/
+OSThread* volatile OS_next;	/* scheduled to run thread */
 
-// array of threads
-OSThread* threads[32 + 1];
+// array of threads(including idle thread at index 0)
+OSThread* OS_threads[32 + 1];
 // count of total threads active 
 uint8_t OS_thread_num; 
 // index of the thread to run
 uint8_t i_thread;
 
-void OS_init(void) {
+// bitset for thread's(except idle thread) ready flag 
+uint32_t OS_ready_set;
+
+// its stack will be declared in the main file
+OSThread idle_thread;
+
+void idle_main(void) {
+	while(1) {
+		// defined in main.c 
+		OS_onIdle();
+	}
+}
+
+void OS_init(void* stack, uint32_t stack_size) {
 	// set PendSV to lowest priority so that it is the last interrupt to be serviced
 	// Refer: Page No. 61: STM32F0 Cortex-M programming manual 
 	*((uint32_t volatile *)SHPR3) = (0x00000000 | 0xF << 20);
+	
+	// start idle thread
+	OSThread_start(&idle_thread,
+					idle_main,
+					stack,
+					stack_size);			
 }
 
 void OS_sched(void) {
-	// __asm("BKPT");
-	OS_next = threads[i_thread++];
+	if (OS_ready_set == 0U) {
+		// no thread is ready
+		// schedule idle thread	
+		i_thread = 0;
+	} else {
+		// there is a thread thats ready!
+		// find a ready thread
+		do {
+			i_thread++;
+			// wrap around, starting at index 1  
+			if (i_thread == OS_thread_num) i_thread = 1;
+		//	ith thread has (i - 1)th bit in the ready bit set because there is no bit for idle thread	
+		} while(((1U << (i_thread - 1U)) & OS_ready_set) == 0);
+		
+	}
+	
+	// const pointer 
+	OSThread* const next = OS_threads[i_thread];
 	// update counter
-	if (i_thread >= OS_thread_num) i_thread = 0;
-	if (OS_next != OS_curr) {
+	// ROUND ROBIN: if (i_thread >= OS_thread_num) i_thread = 0;
+	if (next != OS_curr) {
+		OS_next = next;	
 		// set PendSV pending for context switching
 		*((volatile uint32_t*)ICSR) |= 1 << PENDSVSET;
 	}
+}
+
+// for delaying a thread by 'ticks'
+void OS_delay(uint32_t ticks) {
+	if (i_thread == 0) return;	
+	__asm volatile("CPSID 	i");
+	
+	OS_curr->timeout = ticks;	
+	// clear ready bit for the current thread i.e. mark it busy
+	OS_ready_set &= ~(1U << (i_thread - 1U));
+	// switch context away from this thread since it just got a timeout
+	OS_sched();
+	
+	__asm volatile("CPSIE 	i");
+	// now the context switch will be performed 
+}
+
+// for updating timeout counter of the threads
+// this function will be called from systick handler
+// so disabling threads and calling OS_sched is not required
+void OS_tick(uint32_t ticks) {
+	uint8_t i;
+	for (i = 1; i < OS_thread_num; i++) {
+		if (OS_threads[i]->timeout != 0) {
+			(OS_threads[i]->timeout)--;
+			// mark the thread ready
+			if (OS_threads[i]->timeout == 0) OS_ready_set |= (1U << (i - 1));
+		}	
+	} 
 }
 
 void OSThread_start (
@@ -83,15 +147,19 @@ void OSThread_start (
 	}
 
 	// save the thread
-	threads[OS_thread_num++] = this;
+	OS_threads[OS_thread_num] = this;
+	// mark it ready	
+	if (OS_thread_num > 0) {
+		OS_ready_set |= (1U << (OS_thread_num - 1U));
+	}
+	
+	OS_thread_num++;
 }
 
 // optimize attribute is used to particularly optimize marked piece of code
 __attribute__ ((naked, optimize("-fno-stack-protector")))
 void PendSV_Handler() {	
-	// __asm volatile("BKPT");
 	__asm volatile(
-		// "BKPT						\n"
 		// disable IRQs
 		"CPSID 	i					\n"
 		// following 2 lines are equivalent of: r1 = OS_curr->sp
@@ -122,7 +190,6 @@ void PendSV_Handler() {
 		"LDR	R1,[R1,#0x00]		\n"		// R1 = OS_next	
 		"LDR	R1,[R1,#0x00]		\n"		// R1 = OS_next->sp
 		"MSR	MSP, R1				\n"		// sp = OS_next->sp 
-		// "LDR	R13,[R1,#0x00]		\n"
 
 		// OS_curr = OS_next, update pointer
 		// remember that OS_Thread struct is only characterized by the 
@@ -133,15 +200,15 @@ void PendSV_Handler() {
 		"STR	R1,[R2,#0x00]		\n"
 		
 		// restore the extra registers
-		// pop stack 7 times and load values in registerst successively 
+		// pop stack n times and load values in registers successively 
 		// lowest numbered register(eg r4 here) uses the lowest memory addr 
-		// and the highest register(eg. r11) using the highest memory addr
+		// and the highest register(eg. r7) using the highest memory addr
 		"POP	{R4-R7}				\n"
 		
 		// renable interrupts 
 		"CPSIE	i					\n"
-		// LR is loaded with a sepcial value that, when loaded in PC, tells the cpu that
-		// the exception is completed
+		// LR is loaded with a special value that, when loaded in PC, tells the cpu that
+		// the exception is completed and the reversal of stacking is performed by cpu 
 		"BX		LR					\n"	
 	);
 }

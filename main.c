@@ -52,18 +52,20 @@ uint8_t message[] = {'c', 'o', 'u', 'n', 't', 'e', 'r', ':', ' ', 0, '\r'};
 
 uint32_t tick_counter = 0;
 
+// no need for user defined delay method, OS will handle the delays
+/*
 void delay(uint32_t duration) {
 	uint32_t curr = tick_counter;
 	while ((tick_counter - curr) < duration);
 }
-
+*/
 uint32_t stack1[40];
 void Blinky1() {
 	while(1) {
 		// __asm volatile("BKPT");
-		delay(TICKS_PER_SEC / 4);
-		toggle_pin(LED1, GPIOC);
-		delay(TICKS_PER_SEC / 4);
+		// OS_delay(TICKS_PER_SEC / 4);
+		toggle_pin(LED1, GPIOC);	
+		OS_delay(TICKS_PER_SEC / 4);
 	}
 }
 
@@ -71,16 +73,25 @@ uint32_t stack2[40];
 void Blinky2() {
 	// __asm volatile("BKPT");
 	while(1) {
-		delay(TICKS_PER_SEC / 2);
+		// OS_delay(TICKS_PER_SEC / 2);
 		toggle_pin(LED2, GPIOC);
-		delay(TICKS_PER_SEC / 2);
+		OS_delay(TICKS_PER_SEC / 2);
 	}
 }
 
+// idle thread function
+void OS_onIdle(void) {
+	// do nothing or put cpu to sleep using WFI	
+}
+
+uint32_t stack_idleThread[40];
+
 void SysTick_Handler(void) {
 	// use BKPT instruction to add a breakpoint here 
-	// toggle operation
-	tick_counter++;	
+	// toggle operation	
+	OS_tick();	
+	// tick_counter++;	
+
 	__asm volatile("CPSID i");
 	OS_sched();
 	__asm volatile("CPSIE i");
@@ -118,12 +129,14 @@ int main(void) {
 	}
 
 	reset_gpio(); 
-	OS_init();
 	// configure pins
 	// you also need to tell which GPIO it is, A, B, C etc
 	configure_pin(LED1, 1, GPIOC);	
 	configure_pin(LED2, 1, GPIOC);
 
+
+	OS_init(stack_idleThread, sizeof(stack_idleThread));
+	
 	// configure_usart1(BAUD_RATE1);
 	// configure_usart2(BAUD_RATE2);
 	// 2: AF(alternate function) mode

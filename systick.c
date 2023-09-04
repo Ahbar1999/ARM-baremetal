@@ -20,7 +20,7 @@ extern volatile uint32_t* STK_CVR = (uint32_t*)STK_CVR_ADDR;
 extern volatile uint32_t* STK_CALIB = (uint32_t*)STK_CALIB_ADDR;
 extern uint8_t systick_configured = 0;
 
-void configure_systick(uint32_t reload_value) {
+void configure_systick(uint32_t reload_value, uint8_t enable_int) {
 	if (systick_configured) return;
 
 	systick_configured = 1; 
@@ -30,10 +30,12 @@ void configure_systick(uint32_t reload_value) {
 	*STK_CSR 	= STK_CSR_RV; 	
 	// configure, ENABLE CSR, rest of the values are default, clock: system
 	// 0b11
-	// __asm volatile("BKPT #0");	
-	*STK_CSR	|= 1 << 1;	// enable ISR	
-	*STK_CSR 	|= 1 << 0; // and enable systick finally
+	// __asm volatile("BKPT #0");
+	if (enable_int != 0) {
+		*STK_CSR	|= 1 << 1;	// enable interrupt
+	}
 
+	*STK_CSR 	|= 1 << 0; // and enable systick finally
 	// __asm volatile("BKPT #1");	
 }
 

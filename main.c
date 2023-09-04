@@ -52,13 +52,6 @@ uint8_t message[] = {'c', 'o', 'u', 'n', 't', 'e', 'r', ':', ' ', 0, '\r'};
 
 uint32_t tick_counter = 0;
 
-// no need for user defined delay method, OS will handle the delays
-/*
-void delay(uint32_t duration) {
-	uint32_t curr = tick_counter;
-	while ((tick_counter - curr) < duration);
-}
-*/
 uint32_t stack1[40];
 void Blinky1() {
 	while(1) {
@@ -91,7 +84,7 @@ void SysTick_Handler(void) {
 	// toggle operation	
 	OS_tick();	
 	// tick_counter++;	
-
+	
 	__asm volatile("CPSID i");
 	OS_sched();
 	__asm volatile("CPSIE i");
@@ -109,12 +102,7 @@ void SVCall_Handler(void) {
 	while(1);
 }
 
-// defined in kernel.c for os purposes
-/* 
-void PendSV_Handler(void) {
-	while(1);
-}
-*/
+// PendSV_Handler defined in kernel.c for os purposes
 
 int main(void) {
 	// enable/configure any interrutps
@@ -125,44 +113,47 @@ int main(void) {
   	// HIS or internal oscillator is used as clk source
 	// for systick therefore clk freq if 8 MHz
 	if (!systick_configured) {
-		configure_systick(STK_RV);
+		configure_systick(STK_RV, 1);
 	}
 
-	reset_gpio(); 
+	reset_gpio();
+	/*
 	// configure pins
 	// you also need to tell which GPIO it is, A, B, C etc
 	configure_pin(LED1, 1, GPIOC);	
 	configure_pin(LED2, 1, GPIOC);
 
-
-	OS_init(stack_idleThread, sizeof(stack_idleThread));
+	// OS_init(stack_idleThread, sizeof(stack_idleThread));
 	
-	// configure_usart1(BAUD_RATE1);
-	// configure_usart2(BAUD_RATE2);
+	configure_usart1(BAUD_RATE1);
+	configure_usart2(BAUD_RATE2);
 	// 2: AF(alternate function) mode
-	// configure_pin(USART1_TX, 2, GPIOA);
-	// configure_pin(USART1_RX, 2, GPIOA);
+	configure_pin(USART1_TX, 2, GPIOA);
+	configure_pin(USART1_RX, 2, GPIOA);
 	
-	// configure_pin(USART2_TX, 2, GPIOA);
-	// configure_pin(USART2_RX, 2, GPIOA);	
+	configure_pin(USART2_TX, 2, GPIOA);
+	configure_pin(USART2_RX, 2, GPIOA);	
 	// enable interrupt on uart1
-	// uart_enable_interrupt(0);
-	// echo();
-	
+	// uart_enable_interrupt(0);	
+	echo();
+	*/
+		
 	OSThread blinky1_thread;
 	OSThread blinky2_thread;
 	OSThread_start(
 			&blinky1_thread,
+			5U,
 			Blinky1,
 			stack1,
 			sizeof(stack1));
 	
 	OSThread_start(
 		&blinky2_thread,
+		2U,
 		Blinky2,
 		stack2,
 		sizeof(stack2));
-		
+			
 	while(1);
     
 	return 0;

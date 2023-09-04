@@ -5,23 +5,31 @@
 #define SHPR3 0xE000ED20
 // interrupt control and state register
 #define ICSR 0xE000ED04
-#define PENDSVSET 28
+#define PENDSVSET 28 
 
 OSThread* volatile OS_curr;	/* current running thread	*/
 OSThread* volatile OS_next;	/* scheduled to run thread */
 
 // array of threads(including idle thread at index 0)
+// indices represent priorities, 0th index is reserved for idle
 OSThread* OS_threads[32 + 1];
-// count of total threads active 
-uint8_t OS_thread_num; 
-// index of the thread to run
-uint8_t i_thread;
 
-// bitset for thread's(except idle thread) ready flag 
+// bitset for thread's(including idle thread with 0(lowest priority) ready flag 
+// again indices are priorities
+// convention: higher index -> higher priority
 uint32_t OS_ready_set;
 
 // its stack will be declared in the main file
 OSThread idle_thread;
+
+// cound leading zeroes
+uint32_t clz(uint32_t x) {
+	uint8_t i = 31;
+
+	while ((i >= 0) && ((x & (1 << i)) == 0)) i--; 
+
+	return 31 - i;
+}
 
 void idle_main(void) {
 	while(1) {
@@ -37,6 +45,7 @@ void OS_init(void* stack, uint32_t stack_size) {
 	
 	// start idle thread
 	OSThread_start(&idle_thread,
+					0,
 					idle_main,
 					stack,
 					stack_size);			
@@ -45,26 +54,15 @@ void OS_init(void* stack, uint32_t stack_size) {
 void OS_sched(void) {
 	if (OS_ready_set == 0U) {
 		// no thread is ready
-		// schedule idle thread	
-		i_thread = 0;
+		// schedule idle thread
+		OS_next = OS_threads[0];	
 	} else {
 		// there is a thread thats ready!
-		// find a ready thread
-		do {
-			i_thread++;
-			// wrap around, starting at index 1  
-			if (i_thread == OS_thread_num) i_thread = 1;
-		//	ith thread has (i - 1)th bit in the ready bit set because there is no bit for idle thread	
-		} while(((1U << (i_thread - 1U)) & OS_ready_set) == 0);
-		
+		// find a ready thread	
+		OS_next = OS_threads[32 - clz(OS_ready_set)];	
 	}
-	
-	// const pointer 
-	OSThread* const next = OS_threads[i_thread];
-	// update counter
-	// ROUND ROBIN: if (i_thread >= OS_thread_num) i_thread = 0;
-	if (next != OS_curr) {
-		OS_next = next;	
+	// if scheduled thread is not running, run it	
+	if (OS_next != OS_curr) {
 		// set PendSV pending for context switching
 		*((volatile uint32_t*)ICSR) |= 1 << PENDSVSET;
 	}
@@ -72,12 +70,12 @@ void OS_sched(void) {
 
 // for delaying a thread by 'ticks'
 void OS_delay(uint32_t ticks) {
-	if (i_thread == 0) return;	
+	// if (i_thread == 0) return;	
 	__asm volatile("CPSID 	i");
 	
 	OS_curr->timeout = ticks;	
 	// clear ready bit for the current thread i.e. mark it busy
-	OS_ready_set &= ~(1U << (i_thread - 1U));
+	OS_ready_set &= ~(1U << (OS_curr->priority - 1U));
 	// switch context away from this thread since it just got a timeout
 	OS_sched();
 	
@@ -88,10 +86,10 @@ void OS_delay(uint32_t ticks) {
 // for updating timeout counter of the threads
 // this function will be called from systick handler
 // so disabling threads and calling OS_sched is not required
-void OS_tick(uint32_t ticks) {
-	uint8_t i;
-	for (i = 1; i < OS_thread_num; i++) {
-		if (OS_threads[i]->timeout != 0) {
+void OS_tick(uint32_t ticks) {	
+	for (uint8_t i = 1; i < 32; i++) {
+		// check for nullptr and valid timeout
+		if (OS_threads[i] != ((OSThread*)0) && OS_threads[i]->timeout != 0) {
 			(OS_threads[i]->timeout)--;
 			// mark the thread ready
 			if (OS_threads[i]->timeout == 0) OS_ready_set |= (1U << (i - 1));
@@ -101,6 +99,7 @@ void OS_tick(uint32_t ticks) {
 
 void OSThread_start (
 	OSThread *this,
+	uint8_t priority,	
 	OSThreadHandler threadHandler,
 	void *stkSto, uint32_t stkSize)
 {
@@ -145,15 +144,16 @@ void OSThread_start (
 	for (sp = sp - 1U; sp >= stk_limit; --sp) {
 		*sp = 0x00ABCDEF;
 	}
-
-	// save the thread
-	OS_threads[OS_thread_num] = this;
-	// mark it ready	
-	if (OS_thread_num > 0) {
-		OS_ready_set |= (1U << (OS_thread_num - 1U));
-	}
+	//  ensure that priority is within index range and
+	//  the index is free to use 
+	// save thread's info
+	OS_threads[priority] = this;
+	this->priority = priority;	
 	
-	OS_thread_num++;
+	// mark it ready		
+	if (priority > 0) {
+		OS_ready_set |= (1U << (priority - 1U));
+	}
 }
 
 // optimize attribute is used to particularly optimize marked piece of code

@@ -57,6 +57,7 @@ void PendSV_Handler(void) __attribute__((weak, alias("Default_Handler")));
 void SysTick_Handler(void) __attribute__((weak, alias("Default_Handler")));
 
 void UART1_Handler(void) __attribute__((weak, alias("Default_Handler")));
+void UART2_Handler(void) __attribute__((weak, alias("Default_Handler")));
 
 uint32_t vectors[] __attribute__((section(".isr_vector"))) = {
 	STACK_START,
@@ -104,6 +105,7 @@ uint32_t vectors[] __attribute__((section(".isr_vector"))) = {
 	0,
 	0,
 	(uint32_t)UART1_Handler,
+	(uint32_t)UART2_Handler,
 	0,
 	0,
 	0,

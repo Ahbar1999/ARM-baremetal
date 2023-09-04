@@ -35,6 +35,9 @@
 // idle line detection
 #define IDLE	4
 #define BUSY 	16
+#define IDLEIE	4
+// Rx timeout bit in ISR register
+#define RTOF	11
 
 
 // defined in gpio.c
@@ -114,12 +117,16 @@ void configure_usart2(uint16_t baud_rate) {
 	*USART2_TDR		=	USART_TDR_RV;
 	
 	*USART2_BRR = baud_rate;
-	// stop bits = 00;
+	// stop bits programmed to = 00(1);
 	
-	*USART2_CR1 |= 1 << 0; 	// USART enable, UE = 1	
+	*USART2_CR1 |= 1 << 0; 			// USART enable, UE = 1	
 	usart2_configured = 1;
-	*USART2_CR1 |= 1 << 3;	 
-	*USART2_CR1 |= 1 << 2;	// Rx enable, RE = 1, start seaching for start bit	
+	// enable receiver timeout(NOT SUPPORTED IN USART2 on stm32f05)		
+	// *USART2_CR2 |= 1 << 23;			// RTOEN = 1 	 
+	// *USART2_RTOR =	1000U;			// timeout bits programming	
+	
+	*USART2_CR1 |= 1 << 3;			// TE = 1 	 
+	*USART2_CR1 |= 1 << 2;			// Rx enable, RE = 1, start seaching for start bit	
 } 
 
 /*
@@ -144,83 +151,81 @@ void uart_enable_interrupt(uint8_t uart_x, uint8_t recv) {
 
 /*
 void UART1_Handler() {
-	__asm volatile("BKPT");
+	// __asm volatile("BKPT");
 		
 }
 */
+/*
+void UART2_Handler() {
+	__asm volatile("BKPT");
+}
+*/
 
-void write_usart(volatile uint32_t* USARTx_ISR, volatile uint32_t* USARTx_TDR, volatile uint32_t* USARTx_ICR, uint8_t* data, uint8_t size) {
+void write_usart(volatile uint32_t* USARTx_ISR, volatile uint32_t* USARTx_TDR, volatile uint32_t* USARTx_ICR, uint8_t* buf, uint8_t size) {
 		// now transmit data
 		uint8_t i = 0;
 		while (i < size) {
 			// check TC bit, if it is 1 or not
 			if ((*USARTx_ISR & (1 << 6))) {	
-				*USARTx_TDR = data[i++];	
+				*USARTx_TDR = buf[i++];	
 			}
 		}
+
 		// set TCCF
 		*USARTx_ICR |= (1 << 6);
 }
-
-uint8_t recv_usart(volatile uint32_t* USARTx_ISR, volatile uint32_t* USARTx_RDR, uint8_t* buf) {
+// we will have to uart interrupts to process data, there is no other way
+uint8_t recv_esp(volatile uint32_t* USARTx_ISR, volatile uint32_t* USARTx_RDR, volatile uint8_t* buf) {
+		// clear buffer
 		uint8_t i = 0;
-		// wait for first data
-
-		// while(i == 0 || !((buf[i - 1] == '\n') && ((*USARTx_ISR & (1 << RXNE)) == 0))) {
-		while((*USARTx_ISR & (1 << BUSY)) == 0);	
-		while ((*USARTx_ISR & (1 << BUSY))) {
+		// recieve until timeout
+		while(1) {
 			if (*USARTx_ISR & (1 << RXNE)) {	
-				buf[i++] = (uint8_t)(*USARTx_RDR);	
-			} 
+				buf[i++] = (uint8_t)(*USARTx_RDR);
+			}		
 		}
-		/*
-		while ((*USARTx_ISR & (1 << RXNE)) || (buf[i - 1] != '\n')) {
-			if (*USARTx_ISR & (1 << RXNE)) {	
-				buf[i++] = (uint8_t)(*USARTx_RDR);	
-			} 
-		}		
-		*/
-		return i;	
+
+		return i;		
+}
+
+uint8_t get_input(volatile uint32_t* USARTx_ISR, volatile uint32_t* USARTx_RDR, uint8_t* buf){
+	uint8_t i = 0;	
+	while(i == 0 || buf[i - 1] != '\n') {
+		if (*USARTx_ISR & (1 << RXNE)) {	
+			buf[i++] = (uint8_t)(*USARTx_RDR);	
+		}
+	}
+	return i;
 }
 
 // null byte is implicit in c strings
+// flush terminal characters(for putty like tools)
+uint8_t flush[] = "\033\143";
+uint8_t prompt[] = "> ";
 // buffer for receiving and sending data
 uint8_t recv_buf[100];
-// flush terminal characters
-uint8_t flush[] = "\033\143";
-// prompt character
-uint8_t prompt[] = "> ";
+uint8_t bytes_recvd;
 
 // echo from uartx to uarty
 void echo() {		
-	uint8_t bytes_recvd;
-	// wait for first keys
-	bytes_recvd = recv_usart(USART1_ISR, USART1_RDR, recv_buf);
-	// flush once
-	// write_usart(USART1_ISR, USART1_TDR, USART1_ICR, flush, (sizeof(flush) / sizeof(flush[0])));	
 	while(1) {
-		// listen to pc	
-		// write_usart(USART1_ISR, USART1_TDR, USART1_ICR, recv_buf, (sizeof(recv_buf) / sizeof(recv_buf[0])));	
-		// discard first message, flush serial terminal screen
-		// set buffer to null characters
-		for (uint8_t i = 0; i < (sizeof(recv_buf) / sizeof(recv_buf[0])); i++) recv_buf[i] = '\0';		
-		// show prompt
+			
+		// show prompt; 
 		write_usart(USART1_ISR, USART1_TDR, USART1_ICR, prompt, (sizeof(prompt) / sizeof(prompt[0])));	
 		// listen to pc	
-		bytes_recvd = recv_usart(USART1_ISR, USART1_RDR, recv_buf);		
+		bytes_recvd = get_input(USART1_ISR, USART1_RDR, recv_buf);		
 		// echo back message	
 		write_usart(USART1_ISR, USART1_TDR, USART1_ICR, recv_buf, bytes_recvd);	
 		
 		// send to esp
 		write_usart(USART2_ISR, USART2_TDR, USART2_ICR, recv_buf, bytes_recvd);	
+				
 		// listen to esp
-		bytes_recvd = recv_usart(USART2_ISR, USART2_RDR, recv_buf);		
+		bytes_recvd = recv_esp(USART2_ISR, USART2_RDR, recv_buf);		
 		// __asm volatile("BKPT");		
-		// flush serial terminal screen
-		// write_usart(USART1_ISR, USART1_TDR, USART1_ICR, flush, (sizeof(flush) / sizeof(flush[0])));	
 		// send to pc 
 		write_usart(USART1_ISR, USART1_TDR, USART1_ICR, recv_buf, bytes_recvd);
-		
+				
 		*USART1_RQR |= (1 << 3);	// Receive data flush request, discard data in the rdr	
 		*USART2_RQR |= (1 << 3);	// Receive data flush request, discard data in the rdr
 	}

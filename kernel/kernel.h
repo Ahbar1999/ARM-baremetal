@@ -4,6 +4,7 @@
 typedef struct {
 	void* sp;	// stack pointer
 	uint32_t timeout;	// delay countdown
+	uint8_t priority;	
 	/* other info */
 } OSThread;
 
@@ -27,6 +28,7 @@ void OS_delay(uint32_t ticks);
  * */
 void OSThread_start(
 	OSThread *this,
+	uint8_t priority,
 	OSThreadHandler threadHandler,
 	void *stkSto, uint32_t stkSize);
 
